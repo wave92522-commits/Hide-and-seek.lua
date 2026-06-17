@@ -1,10 +1,3 @@
-local AllowedPlaceId = 137541498231955
-
-repeat task.wait() until game.PlaceId ~= 0
-
-if game.PlaceId ~= AllowedPlaceId then
-    return
-end
 
 local lib = {}
 
