@@ -38,7 +38,7 @@ function lib:CreateUI(uiname, initialBind)
     UIFrame.Size = UDim2.new(0, 601, 0, 420)
     UIFrame.Draggable = true
     UIFrame.Active = true
-    UIFrame.Visible = true  -- меню открыто при старте
+    UIFrame.Visible = true
 
     local CloseButton = Instance.new("TextButton")
     CloseButton.Parent = UIFrame
@@ -505,13 +505,21 @@ local states = {
     seekerFollow = false,
     seekerFollowDir = "Вперед",
     showMiniIcon = true,
-    uiScheme = "Тёмная"
+    uiScheme = "Тёмная",
+    farmEgg = false,
+    farmEggV2 = false,
+    farmV2Mode = "Pull",
+    espEggs = false,
+    espCoins = false,
+    espItemsBox = true,
+    espItemsName = true,
+    espItemsDist = true
 }
 
 local currentSpeed = 150
 local currentJump = 200
 local currentHitbox = 2
-local aimbotFOV = 200
+local aimbotFOV = 75
 local teleportTarget = nil
 local dodgeIntensity = 5
 local attachBodyPart = "Head"
@@ -628,6 +636,244 @@ local function applySeekerFollow(enable)
     if not enable then return end spawn(function() while states.seekerFollow do if not isHider(LP) then wait(0.5) continue end local myRoot=getRoot(LP) if not myRoot then wait(0.5) continue end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=LP and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if closestSeeker and getRoot(closestSeeker) then local seekerRoot=getRoot(closestSeeker) local dir=states.seekerFollowDir local offset=Vector3.zero local look=seekerRoot.CFrame.LookVector local right=seekerRoot.CFrame.RightVector if dir=="Вперед" then offset=look*5 elseif dir=="Назад" then offset=-look*5 elseif dir=="Слева" then offset=-right*5 elseif dir=="Справа" then offset=right*5 end local targetPos=seekerRoot.Position+offset+Vector3.new(0,2,0) myRoot.CFrame=CFrame.new(targetPos) myRoot.Velocity=Vector3.zero local bv=Instance.new("BodyVelocity") bv.Velocity=Vector3.zero bv.MaxForce=Vector3.new(1e6,1e6,1e6) bv.Parent=myRoot game.Debris:AddItem(bv,0.1) end wait(0.1) end end)
 end
 
+-- ========== НОВЫЕ ФУНКЦИИ ДЛЯ ФЕРМЫ И ESP ==========
+local function getSafeUnderMapPos()
+    local minY = math.huge
+    for _, v in ipairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") then
+            if v.Position.Y < minY then
+                minY = v.Position.Y
+            end
+        end
+    end
+    local root = getRoot(LP)
+    local x, z = root and root.Position.X or 0, root and root.Position.Z or 0
+    return Vector3.new(x, minY - 10, z)
+end
+
+local function lockHover()
+    local root = getRoot(LP)
+    if not root then return end
+    local existing = root:FindFirstChild("FarmHover")
+    if existing then existing:Destroy() end
+    local bv = Instance.new("BodyVelocity")
+    bv.Name = "FarmHover"
+    bv.Velocity = Vector3.new(0, 0, 0)
+    bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+    bv.Parent = root
+end
+
+local function unlockHover()
+    local root = getRoot(LP)
+    if root then
+        local bv = root:FindFirstChild("FarmHover")
+        if bv then bv:Destroy() end
+    end
+end
+
+local function startFarmEgg()
+    local root = getRoot(LP)
+    if not root then return end
+    local wasNoclip = states.noclip
+    if not wasNoclip then
+        states.noclip = true
+        applyNoclip(true)
+    end
+    local safePos = getSafeUnderMapPos()
+    root.CFrame = CFrame.new(safePos)
+    lockHover()
+    local lastTarget = nil
+    while states.farmEgg and root and root.Parent do
+        local closest = nil
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsDescendantOf(workspace:FindFirstChild("Lobby")) then
+                local name = obj.Name:lower()
+                if name:find("egg") or name:find("coin") or name:find("money") or name:find("gem") or name:find("crystal") or name:find("chest") then
+                    closest = obj
+                    break
+                end
+            end
+        end
+        if closest and closest ~= lastTarget then
+            lastTarget = closest
+            if root and root.Parent then
+                root.CFrame = CFrame.new(closest.Position + Vector3.new(0, 3, 0))
+                wait(0.1)
+                if root and root.Parent then
+                    root.CFrame = CFrame.new(safePos)
+                    lockHover()
+                end
+            end
+        end
+        wait(0.2)
+    end
+    unlockHover()
+    if not wasNoclip then
+        states.noclip = false
+        applyNoclip(false)
+    end
+end
+
+local function startFarmEggV2()
+    local root = getRoot(LP)
+    if not root then return end
+    local wasNoclip = states.noclip
+    if not wasNoclip then
+        states.noclip = true
+        applyNoclip(true)
+    end
+    local safePos = getSafeUnderMapPos()
+    root.CFrame = CFrame.new(safePos)
+    lockHover()
+    while states.farmEggV2 and root and root.Parent do
+        local allItems = {}
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsDescendantOf(workspace:FindFirstChild("Lobby")) then
+                local name = obj.Name:lower()
+                if name:find("egg") or name:find("coin") or name:find("money") or name:find("gem") or name:find("crystal") or name:find("chest") then
+                    table.insert(allItems, obj)
+                end
+            end
+        end
+        if states.farmV2Mode == "Pull" then
+            for _, obj in ipairs(allItems) do
+                if obj and obj:IsA("BasePart") then
+                    obj.CFrame = root.CFrame * CFrame.new(0, 5, 0)
+                    obj.Velocity = Vector3.zero
+                end
+            end
+        else
+            for _, obj in ipairs(allItems) do
+                if not root or not root.Parent then break end
+                unlockHover()
+                local targetPos = obj.Position + Vector3.new(0, -2, 0)
+                root.CFrame = CFrame.new(targetPos)
+                lockHover()
+                task.wait()
+            end
+        end
+        task.wait(0.01)
+    end
+    if root and root.Parent then
+        root.CFrame = CFrame.new(safePos)
+        lockHover()
+    end
+    if not wasNoclip then
+        states.noclip = false
+        applyNoclip(false)
+    end
+end
+
+-- ESP предметов
+local itemDrawings = {}
+local lastItemESPUpdate = 0
+
+local function createItemESP(obj, itemType, color)
+    if itemDrawings[obj] then return end
+    local box = Drawing.new("Square")
+    box.Visible = false
+    box.Color = color
+    box.Thickness = 2
+    box.Filled = false
+
+    local name = Drawing.new("Text")
+    name.Visible = false
+    name.Color = Color3.fromRGB(255, 255, 255)
+    name.Size = 14
+    name.Center = true
+    name.Outline = true
+    name.Text = itemType
+
+    local dist = Drawing.new("Text")
+    dist.Visible = false
+    dist.Color = Color3.fromRGB(255, 255, 255)
+    dist.Size = 12
+    dist.Center = true
+    dist.Outline = true
+
+    itemDrawings[obj] = {Box = box, Name = name, Dist = dist}
+end
+
+local function removeItemESP()
+    for obj, drawings in pairs(itemDrawings) do
+        drawings.Box:Remove()
+        drawings.Name:Remove()
+        drawings.Dist:Remove()
+    end
+    itemDrawings = {}
+end
+
+local function updateItemESP()
+    local myRoot = getRoot(LP)
+    local activeEggs = states.espEggs
+    local activeCoins = states.espCoins
+    if not activeEggs and not activeCoins then
+        if next(itemDrawings) then removeItemESP() end
+        return
+    end
+
+    local currentItems = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and not obj:IsDescendantOf(workspace:FindFirstChild("Lobby")) then
+            local name = obj.Name:lower()
+            if activeEggs and name:find("egg") then
+                currentItems[obj] = "Egg"
+            elseif activeCoins and (name:find("coin") or name:find("money") or name:find("gem") or name:find("crystal") or name:find("chest")) then
+                currentItems[obj] = "Coin"
+            end
+        end
+    end
+
+    for obj, drawings in pairs(itemDrawings) do
+        if not currentItems[obj] or not obj.Parent then
+            drawings.Box:Remove()
+            drawings.Name:Remove()
+            drawings.Dist:Remove()
+            itemDrawings[obj] = nil
+        end
+    end
+
+    for obj, itemType in pairs(currentItems) do
+        if not itemDrawings[obj] then
+            local color = itemType == "Egg" and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 0)
+            createItemESP(obj, itemType, color)
+        end
+    end
+
+    for obj, drawings in pairs(itemDrawings) do
+        local box, name, dist = drawings.Box, drawings.Name, drawings.Dist
+        if obj.Parent then
+            local pos, onScreen = Camera:WorldToViewportPoint(obj.Position)
+            if onScreen then
+                local size = 24
+                box.Size = Vector2.new(size, size)
+                box.Position = Vector2.new(pos.X - size/2, pos.Y - size/2)
+                box.Visible = states.espItemsBox
+                name.Position = Vector2.new(pos.X, pos.Y - 30)
+                name.Visible = states.espItemsName
+                if myRoot then
+                    local d = math.floor((myRoot.Position - obj.Position).Magnitude)
+                    dist.Text = d .. "m"
+                    dist.Position = Vector2.new(pos.X, pos.Y - 45)
+                    dist.Visible = states.espItemsDist
+                else
+                    dist.Visible = false
+                end
+            else
+                box.Visible = false
+                name.Visible = false
+                dist.Visible = false
+            end
+        else
+            box.Visible = false
+            name.Visible = false
+            dist.Visible = false
+            itemDrawings[obj] = nil
+        end
+    end
+end
+
+-- ========== CHARACTER ADDED ==========
 LP.CharacterAdded:Connect(function(char)
     wait(0.5)
     if states.hitbox then applyHitbox(true) end
@@ -646,9 +892,11 @@ LP.CharacterAdded:Connect(function(char)
     if states.invisible then applyInvisible(true) end
     if states.besthidev2 then applyBestHideV2(true) end
     if states.seekerFollow then applySeekerFollow(true) end
+    if states.farmEgg then startFarmEgg() end
+    if states.farmEggV2 then startFarmEggV2() end
 end)
 
--- ========== UI ТЕМЫ (ТОЛЬКО СТАТИЧЕСКИЕ) ==========
+-- ========== UI ТЕМЫ ==========
 local function applyUIScheme()
     local screenGui = Window.ScreenGui if not screenGui then return end
     local UIFrame = Window.UIFrame
@@ -676,13 +924,12 @@ local function applyUIScheme()
 end
 
 -- ========== ЗАПОЛНЕНИЕ ВКЛАДОК ==========
--- Главная
+-- Главная (без Fly)
 MainTab:CreateToggle("X-Ray", "Подсветка игроков", false, function(v) states.xray=v if v then enableXray() else disableXray() end end)
 MainTab:CreateToggle("Auto Hide", "Супер-укрытие", false, function(v) states.autohide=v if v then local safePos=findSafeSpot() spawn(function() while states.autohide do local myRoot=getRoot(LP) if myRoot and (myRoot.Position-safePos).Magnitude>5 then myRoot.CFrame=CFrame.new(safePos) end wait(0.5) end end) end end)
 MainTab:CreateDropdown("Часть тела (Safe Hide)", {"Head","Torso","Left Arm","Right Arm","Left Leg","Right Leg"}, function(sel) safeHidePart=sel end)
 MainTab:CreateDropdown("Тип укрытия", {"Сзади","Спереди","Слева","Справа","Сверху","Снизу","Внутри"}, function(sel) safeHideType=sel end)
 MainTab:CreateToggle("Safe Hide Under Seeker", "Прячет относительно искателя", false, function(v) states.safehide=v applySafeHide(v) end)
-MainTab:CreateToggle("Fly", "W/S/Space/Shift", false, function(v) states.fly=v local root=getRoot(LP); local hum=getHum(LP) if not root or not hum then return end if v then hum.PlatformStand=true local gyro=Instance.new("BodyGyro",root); gyro.P=9e4; gyro.MaxTorque=Vector3.new(9e9,9e9,9e9) local vel=Instance.new("BodyVelocity",root); vel.MaxForce=Vector3.new(9e9,9e9,9e9) spawn(function() while states.fly do if root and gyro then gyro.CFrame=Camera.CFrame local s=80 if UIS:IsKeyDown(Enum.KeyCode.W) then vel.Velocity=Camera.CFrame.LookVector*s elseif UIS:IsKeyDown(Enum.KeyCode.S) then vel.Velocity=-Camera.CFrame.LookVector*s elseif UIS:IsKeyDown(Enum.KeyCode.Space) then vel.Velocity=Vector3.new(0,s,0) elseif UIS:IsKeyDown(Enum.KeyCode.LeftShift) then vel.Velocity=Vector3.new(0,-s,0) else vel.Velocity=Vector3.zero end end wait() end gyro:Destroy(); vel:Destroy(); if hum then hum.PlatformStand=false end end) end end)
 MainTab:CreateDropdown("Скорость", {"Медленно (50)","Ниже среднего (100)","Средне (150)","Быстро (200)"}, function(sel) currentSpeed=sel=="Медленно (50)" and 50 or sel=="Ниже среднего (100)" and 100 or sel=="Средне (150)" and 150 or 200 if states.speed then applySpeed(true) end end)
 MainTab:CreateToggle("Speed", "Включить", false, function(v) states.speed=v applySpeed(v) end)
 MainTab:CreateDropdown("Прыжок", {"Низкий (100)","Ниже среднего (150)","Средний (200)","Высокий (250)"}, function(sel) currentJump=sel=="Низкий (100)" and 100 or sel=="Ниже среднего (150)" and 150 or sel=="Средний (200)" and 200 or 250 if states.jump then applyJump(true) end end)
@@ -695,7 +942,15 @@ MainTab:CreateToggle("Anti AFK", "Автоматически прыгать", fa
 MainTab:CreateToggle("Best Hide V2", "Под землю под искателем (Hider)", false, function(v) states.besthidev2=v if v then applyNoclip(true); applyBestHideV2(true) else applyNoclip(false) end end)
 MainTab:CreateToggle("Seeker Follow", "Прикрепиться к искателю", false, function(v) states.seekerFollow=v if v then applySeekerFollow(true) end end)
 MainTab:CreateDropdown("Сторона", {"Вперед","Назад","Слева","Справа"}, function(sel) states.seekerFollowDir=sel end)
-MainTab:AddButton("RESET", function() local root=getRoot(LP) if root then root.CFrame=CFrame.new(0,-500,0) end end)
+MainTab:AddButton("RESET", function()
+    local root = getRoot(LP)
+    if root then
+        root.CFrame = CFrame.new(0, -1000, 0)
+        wait(0.05)
+        local char = getChar(LP)
+        if char then char:BreakJoints() end
+    end
+end)
 
 -- ========== AUTO FARM ==========
 AutoFarmTab:CreateToggle("Auto Farm", "Основной переключатель", false, function(v) states.autofarm=v if v then pcall(function() loadstring(game:HttpGet('https://pastebin.com/raw/3Rnd9rHf'))() end) spawn(function() while states.autofarm do local weapon=getWeapon() if not weapon then local targetPos=findSafeSpot() local myRoot=getRoot(LP) if myRoot then if teleportSpeed=="Мгновенно" then myRoot.CFrame=CFrame.new(targetPos) elseif teleportSpeed=="Быстро" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.15),{CFrame=CFrame.new(targetPos)}); tween:Play(); wait(0.15) elseif teleportSpeed=="Средне" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.3),{CFrame=CFrame.new(targetPos)}); tween:Play(); wait(0.3) elseif teleportSpeed=="Медленно" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.6),{CFrame=CFrame.new(targetPos)}); tween:Play(); wait(0.6) end end else if states.autoClick then local closest,minDist=nil,math.huge local myRoot=getRoot(LP) if myRoot then for _,p in ipairs(Players:GetPlayers()) do if p~=LP and isHider(p) then local root=getRoot(p); local hum=getHum(p) if root and hum and hum.Health>0 then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist; closest=p end end end end end if closest and getRoot(closest) then local targetChar=getChar(closest) local targetPart=targetChar and targetChar:FindFirstChild(autoFarmPart) or getRoot(closest) if targetPart then local myRoot=getRoot(LP) if myRoot then myRoot.CFrame=targetPart.CFrame*CFrame.new(0,0,0.5) myRoot.Velocity=Vector3.zero end local tool=getWeapon() local char=getChar(LP) if tool and tool.Parent~=char then local hum=getHum(LP) if hum then hum:EquipTool(tool) end end if tool and tool:FindFirstChild("Handle") then local handle=tool.Handle if handle:IsA("BasePart") then handle.CFrame=targetPart.CFrame end end pcall(function() VIM:SendMouseButtonEvent(0,0,0,true,game,0) wait(0.01) VIM:SendMouseButtonEvent(0,0,0,false,game,0) end) pcall(function() tool:Activate() end) end end end end wait(clickDelay) end end) end end)
@@ -703,13 +958,18 @@ AutoFarmTab:CreateToggle("Invisible", "Невидимость", false, function(
 AutoFarmTab:CreateDropdown("Скорость телепорта (Hider)", {"Мгновенно","Быстро","Средне","Медленно"}, function(sel) teleportSpeed=sel end)
 AutoFarmTab:CreateToggle("Auto Click", "Авто-атака, когда есть оружие", true, function(v) states.autoClick=v end)
 AutoFarmTab:CreateDropdown("Скорость Auto Click", {"Обычная","Быстрая","Мега быстрая","Предел"}, function(sel) if sel=="Обычная" then clickDelay=0.2 elseif sel=="Быстрая" then clickDelay=0.08 elseif sel=="Мега быстрая" then clickDelay=0.005 elseif sel=="Предел" then clickDelay=0.001 end end)
+AutoFarmTab:CreateToggle("Farm event egg", "Автосбор яиц и монет", false, function(v) states.farmEgg = v if v then startFarmEgg() else unlockHover() end end)
+AutoFarmTab:CreateToggle("Farm V2", "Моментальный сбор (все предметы)", false, function(v) states.farmEggV2 = v if v then startFarmEggV2() end end)
+AutoFarmTab:CreateDropdown("Режим Farm V2", {"Предметы ко мне", "Я к предметам"}, function(sel)
+    states.farmV2Mode = sel == "Предметы ко мне" and "Pull" or "Teleport"
+end)
 
 -- ========== АИМБОТ ==========
 AimbotTab:CreateToggle("Aimbot", "Авто-прицеливание (только с оружием)", false, function(v) states.aimbot=v end)
 AimbotTab:CreateToggle("Team Check", "Не целиться в союзников", false, function(v) states.aimbotTeamCheck=v end)
 AimbotTab:CreateToggle("Visible Check", "Целиться только в видимых", false, function(v) states.aimbotVisibleCheck=v end)
 AimbotTab:CreateDropdown("Часть тела", {"Head","Torso","Random"}, function(sel) states.aimbotTargetPart=sel end)
-AimbotTab:CreateDropdown("FOV", {"50","100","150","200","250","300"}, function(sel) aimbotFOV=tonumber(sel) end)
+AimbotTab:CreateDropdown("FOV", {"50","75","100","150","200","250","300"}, function(sel) aimbotFOV=tonumber(sel) end)
 AimbotTab:CreateDropdown("Сглаживание", {"Мгновенно","Быстро","Средне","Медленно"}, function(sel) if sel=="Мгновенно" then states.aimbotSmoothing=1 elseif sel=="Быстро" then states.aimbotSmoothing=0.3 elseif sel=="Средне" then states.aimbotSmoothing=0.1 elseif sel=="Медленно" then states.aimbotSmoothing=0.05 end end)
 AimbotTab:CreateToggle("FOV Circle", "Круг на экране", false, function(v) states.showfov=v end)
 
@@ -724,6 +984,11 @@ ESPTab:CreateToggle("Box", "Рамка", false, function(v) states.box=v end)
 ESPTab:CreateToggle("Имя", "Ник", false, function(v) states.name=v end)
 ESPTab:CreateToggle("Трейсер", "Линия", false, function(v) states.tracer=v end)
 ESPTab:CreateToggle("Дистанция", "растояние игрока", false, function(v) states.dist=v end)
+ESPTab:CreateToggle("ESP Eggs", "Подсветка яиц", false, function(v) states.espEggs = v end)
+ESPTab:CreateToggle("ESP Coins", "Подсветка монет", false, function(v) states.espCoins = v end)
+ESPTab:CreateToggle("Box (Items)", "Рамка предметов", true, function(v) states.espItemsBox = v end)
+ESPTab:CreateToggle("Имя (Items)", "Тип предмета", true, function(v) states.espItemsName = v end)
+ESPTab:CreateToggle("Дист. (Items)", "Расстояние до предмета", true, function(v) states.espItemsDist = v end)
 
 -- ========== ТЕЛЕПОРТ ==========
 local telePlayers = {} local function updateTeleList() telePlayers={}; for _,p in ipairs(Players:GetPlayers()) do if p~=LP then table.insert(telePlayers,p.Name) end end end updateTeleList()
@@ -759,19 +1024,23 @@ SettingsTab:CreateToggle("Показывать пинг", "Рядом с FPS", f
 SettingsTab:CreateToggle("Иконка меню", "Показывать квадратик", true, function(v) states.showMiniIcon=v Window.MiniIcon.Visible=v end)
 
 -- ========== ГЛАВНЫЙ ЦИКЛ ==========
-local fovCircle = Instance.new("Frame")
-fovCircle.Size = UDim2.new(0,0,0,0)
-fovCircle.Position = UDim2.new(0.5,0,0.5,0)
-fovCircle.AnchorPoint = Vector2.new(0.5,0.5)
-fovCircle.BorderSizePixel = 0
-fovCircle.BackgroundColor3 = Color3.fromRGB(255,255,255)
-fovCircle.BackgroundTransparency = 0.8
-fovCircle.Visible = false
-Instance.new("UICorner", fovCircle).CornerRadius = UDim.new(0.5,0)
-fovCircle.Parent = game.CoreGui
+local FOVring = Drawing.new("Circle")
+FOVring.Visible = false
+FOVring.Thickness = 1.5
+FOVring.Radius = aimbotFOV
+FOVring.Color = Color3.fromRGB(255, 255, 255)
+FOVring.Filled = false
+FOVring.Position = Camera.ViewportSize / 2
 
 RS.RenderStepped:Connect(function()
-    if states.showfov and states.aimbot then fovCircle.Visible=true; fovCircle.Size=UDim2.new(0,aimbotFOV*2,0,aimbotFOV*2) else fovCircle.Visible=false end
+    if states.showfov then
+        FOVring.Visible = true
+        FOVring.Radius = aimbotFOV
+        FOVring.Position = Camera.ViewportSize / 2
+    else
+        FOVring.Visible = false
+    end
+
     if states.aimbot and getWeapon() and not states.thirdperson then
         local closest=nil; local minWorldDist=math.huge; local center=Vector2.new(Camera.ViewportSize.X/2,Camera.ViewportSize.Y/2); local myRoot=getRoot(LP) if not myRoot then return end
         for _,p in ipairs(Players:GetPlayers()) do
@@ -788,10 +1057,23 @@ RS.RenderStepped:Connect(function()
         end
         if closest then local targetCFrame=CFrame.new(Camera.CFrame.Position,closest.Position) Camera.CFrame=Camera.CFrame:Lerp(targetCFrame,states.aimbotSmoothing) end
     end
+
     if states.esp and drawings then
         for p,d in pairs(drawings) do pcall(function()
             local root=getRoot(p); local hum=getHum(p); local char=getChar(p) if root and hum and hum.Health>0 then local pos,onScreen=Camera:WorldToViewportPoint(root.Position) if onScreen then local team=isSeeker(p) and "Seeker" or (isHider(p) and "Hider" or "?") local color=team=="Seeker" and Color3.fromRGB(255,0,0) or (team=="Hider" and Color3.fromRGB(0,150,255) or Color3.fromRGB(255,255,255)) if states.box and char:FindFirstChild("Head") then local hp=Camera:WorldToViewportPoint(char.Head.Position+Vector3.new(0,0.5,0)) local lp=Camera:WorldToViewportPoint(root.Position-Vector3.new(0,3,0)) local h=math.abs(lp.Y-hp.Y); local w=h*0.65 d.Box.Size=Vector2.new(w,h); d.Box.Position=Vector2.new(hp.X-w/2,hp.Y); d.Box.Color=color; d.Box.Visible=true else d.Box.Visible=false end if states.name then d.Name.Text=p.Name.." ["..team.."]"; d.Name.Position=Vector2.new(pos.X,pos.Y-40); d.Name.Visible=true else d.Name.Visible=false end if states.tracer then d.Tracer.Color=color; d.Tracer.From=Vector2.new(Camera.ViewportSize.X/2,Camera.ViewportSize.Y); d.Tracer.To=Vector2.new(pos.X,pos.Y); d.Tracer.Visible=true else d.Tracer.Visible=false end if states.dist then local myRoot=getRoot(LP) if myRoot then local dist=math.floor((myRoot.Position-root.Position).Magnitude); d.Dist.Text=dist.."m"; d.Dist.Position=Vector2.new(pos.X,pos.Y-55); d.Dist.Visible=true end else d.Dist.Visible=false end else for _,x in pairs(d) do x.Visible=false end end else for _,x in pairs(d) do x.Visible=false end end
         end) end
+    end
+
+    if states.espEggs or states.espCoins then
+        local now = tick()
+        if now - lastItemESPUpdate >= 0.1 then
+            updateItemESP()
+            lastItemESPUpdate = now
+        end
+    else
+        if next(itemDrawings) then
+            removeItemESP()
+        end
     end
 end)
 
