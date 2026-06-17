@@ -1,8 +1,6 @@
-local AllowedGameId = 137541498231955
+local AllowedPlaceId = 137541498231955
 
-repeat task.wait() until game.GameId ~= 0
-
-if game.GameId ~= AllowedGameId then
+if game.PlaceId ~= AllowedPlaceId then
     return
 end
 
@@ -66,7 +64,7 @@ function lib:CreateUI(uiname, initialBind)
     MiniIcon.Size = UDim2.new(0, 40, 0, 40)
     MiniIcon.Position = UDim2.new(0, 20, 0, 20)
     MiniIcon.BackgroundColor3 = Color3.fromRGB(40,40,40)
-    MiniIcon.Text = "📌"
+    MiniIcon.Text = "❄️"
     MiniIcon.TextColor3 = Color3.new(1,1,1)
     MiniIcon.Font = Enum.Font.GothamBold
     MiniIcon.TextSize = 20
@@ -725,7 +723,7 @@ ESPTab:CreateToggle("ESP", "Включить", false, function(v) states.esp=v e
 ESPTab:CreateToggle("Box", "Рамка", false, function(v) states.box=v end)
 ESPTab:CreateToggle("Имя", "Ник", false, function(v) states.name=v end)
 ESPTab:CreateToggle("Трейсер", "Линия", false, function(v) states.tracer=v end)
-ESPTab:CreateToggle("Дистанция", "м", false, function(v) states.dist=v end)
+ESPTab:CreateToggle("Дистанция", "растояние игрока", false, function(v) states.dist=v end)
 
 -- ========== ТЕЛЕПОРТ ==========
 local telePlayers = {} local function updateTeleList() telePlayers={}; for _,p in ipairs(Players:GetPlayers()) do if p~=LP then table.insert(telePlayers,p.Name) end end end updateTeleList()
@@ -749,7 +747,7 @@ TrollTab:CreateToggle("3rd Person", "Вид от третьего лица (Foll
 UITab:CreateDropdown("Тема интерфейса", {"Тёмная","Синяя","Красная"}, function(sel) states.uiScheme=sel applyUIScheme() end)
 
 -- ========== UNLOCK ALL ==========
-UnlockTab:AddButton("🟢 UNLOCK ALL (FREE)", function() end)
+UnlockTab:AddButton("🟢 UNLOCK ALL (BETA)", function() end)
 UnlockTab:AddButton("🔵 UNLOCK ALL (BETA)", function() loadstring(game:HttpGet('https://pastebin.com/raw/EPPkbZgN'))() end)
 
 -- ========== НАСТРОЙКИ ==========
@@ -797,4 +795,4 @@ RS.RenderStepped:Connect(function()
     end
 end)
 
-print("Скрипт загружен! Вкладки переключаются, всё работает.")
+print("Script Loaded!")
