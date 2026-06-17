@@ -1,4 +1,9 @@
--- ========== СТАБИЛЬНЫЙ СКРИПТ (без пропусков, все функции, меню работает) ==========
+local AllowedPlaceId = 137541498231955
+
+if game.PlaceId ~= AllowedPlaceId then
+    return
+end
+
 local lib = {}
 
 function lib:CreateUI(uiname, initialBind)
