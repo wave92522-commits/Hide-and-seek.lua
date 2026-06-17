@@ -1,5 +1,4 @@
--- Game ID игры Shrink Hide & Seek
-local AllowedGameId = 5507434231  -- Это Universe ID игры
+local AllowedGameId = 137541498231955
 
 repeat task.wait() until game.GameId ~= 0
 
