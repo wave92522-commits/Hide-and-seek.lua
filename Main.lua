@@ -1,5 +1,5 @@
 --==================================================================
--- SM1LE HUB v2.0 — Universal
+-- SM1LE HUB v2.0 — Shrink or Hide
 -- RightCtrl hides, — minimizes, ✕ closes.
 --==================================================================
 
@@ -16,6 +16,75 @@ local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
 local lp = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+
+-- ==================================================================
+-- ИНТРО
+-- ==================================================================
+local introGui = Instance.new("ScreenGui")
+introGui.Name = "Sm1leIntro"
+introGui.ResetOnSpawn = false
+introGui.IgnoreGuiInset = true
+introGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
+
+local introFrame = Instance.new("Frame")
+introFrame.Size = UDim2.new(1, 0, 1, 0)
+introFrame.BackgroundColor3 = Color3.fromRGB(10, 2, 2)
+introFrame.BorderSizePixel = 0
+introFrame.Parent = introGui
+
+local introTitle = Instance.new("TextLabel")
+introTitle.Size = UDim2.new(0, 500, 0, 100)
+introTitle.Position = UDim2.new(0.5, -250, 0.5, -50)
+introTitle.BackgroundTransparency = 1
+introTitle.Text = "SM1LE HUB"
+introTitle.Font = Enum.Font.GothamBlack
+introTitle.TextSize = 60
+introTitle.TextColor3 = Color3.fromRGB(220, 20, 20)
+introTitle.TextTransparency = 1
+introTitle.Parent = introFrame
+
+local introSubtitle = Instance.new("TextLabel")
+introSubtitle.Size = UDim2.new(0, 300, 0, 40)
+introSubtitle.Position = UDim2.new(0.5, -150, 0.5, 60)
+introSubtitle.BackgroundTransparency = 1
+introSubtitle.Text = "Shrink or Hide"
+introSubtitle.Font = Enum.Font.Gotham
+introSubtitle.TextSize = 24
+introSubtitle.TextColor3 = Color3.fromRGB(200, 140, 140)
+introSubtitle.TextTransparency = 1
+introSubtitle.Parent = introFrame
+
+local introVersion = Instance.new("TextLabel")
+introVersion.Size = UDim2.new(0, 200, 0, 25)
+introVersion.Position = UDim2.new(0.5, -100, 0.5, 95)
+introVersion.BackgroundTransparency = 1
+introVersion.Text = "by SM1LER"
+introVersion.Font = Enum.Font.GothamMedium
+introVersion.TextSize = 16
+introVersion.TextColor3 = Color3.fromRGB(255, 70, 70)
+introVersion.TextTransparency = 1
+introVersion.Parent = introFrame
+
+local fadeIn = TweenService:Create(introTitle, TweenInfo.new(1, Enum.EasingStyle.Quint), {TextTransparency = 0})
+local fadeInSub = TweenService:Create(introSubtitle, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.In, 0.4), {TextTransparency = 0})
+local fadeInVer = TweenService:Create(introVersion, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.In, 0.7), {TextTransparency = 0})
+local scaleUp = TweenService:Create(introTitle, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 70})
+local fadeOut = TweenService:Create(introFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {BackgroundTransparency = 1})
+
+fadeIn:Play()
+fadeInSub:Play()
+fadeInVer:Play()
+fadeIn.Completed:Wait()
+scaleUp:Play()
+scaleUp.Completed:Wait()
+task.wait(0.3)
+fadeOut:Play()
+fadeOut.Completed:Wait()
+introGui:Destroy()
+
+-- ==================================================================
+-- ОСНОВНОЙ СКРИПТ
+-- ==================================================================
 
 local S = {
     autofarm = false, autohide = false, speed = false, jump = false,
@@ -127,7 +196,7 @@ gradient(byLabel, currentTheme.ByGrad1, currentTheme.ByGrad2, 0)
 
 local statusL = Instance.new("TextLabel"); statusL.Size = UDim2.fromOffset(280,14); statusL.Position = UDim2.fromOffset(58,44)
 statusL.BackgroundTransparency = 1; statusL.Font = Enum.Font.GothamMedium; statusL.TextSize = 9; statusL.TextColor3 = SUB
-statusL.Text = "❄️ Universal Hub"; statusL.TextXAlignment = Enum.TextXAlignment.Left; statusL.Parent = header
+statusL.Text = "❄️ Shrink or Hide"; statusL.TextXAlignment = Enum.TextXAlignment.Left; statusL.Parent = header
 
 local function hbtn(txt,x) local b=Instance.new("TextButton"); b.Size=UDim2.fromOffset(28,28); b.Position=UDim2.new(1,x,0,14)
 b.BackgroundColor3=BG3; b.Text=txt; b.TextColor3=TXT; b.Font=Enum.Font.GothamBold; b.TextSize=15; b.AutoButtonColor=true; b.Parent=header; corner(b,8); return b end
