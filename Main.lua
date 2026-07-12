@@ -17,6 +17,13 @@ local Workspace = game:GetService("Workspace")
 local lp = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
+local function corner(p, r)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, r)
+    c.Parent = p
+    return c
+end
+
 -- ==================================================================
 -- ИНТРО
 -- ==================================================================
@@ -28,63 +35,183 @@ introGui.Parent = (gethui and gethui()) or game:GetService("CoreGui")
 
 local introFrame = Instance.new("Frame")
 introFrame.Size = UDim2.new(1, 0, 1, 0)
-introFrame.BackgroundColor3 = Color3.fromRGB(10, 2, 2)
+introFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 introFrame.BorderSizePixel = 0
 introFrame.Parent = introGui
 
+local snowflakesIntro = {}
+for i = 1, 60 do
+    local flake = Instance.new("Frame")
+    local size = math.random(2, 5)
+    flake.Size = UDim2.fromOffset(size, size)
+    flake.Position = UDim2.fromScale(math.random(), math.random() * -1)
+    flake.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    flake.BackgroundTransparency = math.random() * 0.5 + 0.3
+    flake.BorderSizePixel = 0
+    flake.Parent = introFrame
+    corner(flake, size / 2)
+    local glow = Instance.new("UIStroke")
+    glow.Color = Color3.fromRGB(255, 255, 255)
+    glow.Thickness = 1
+    glow.Transparency = 0.6
+    glow.Parent = flake
+    snowflakesIntro[i] = {
+        dot = flake, glow = glow,
+        x = flake.Position.X.Scale, y = flake.Position.Y.Scale,
+        speed = math.random() * 0.35 + 0.15,
+        wind = math.random() * 0.08 - 0.04,
+        twinkle = math.random() * 10,
+    }
+end
+
 local introTitle = Instance.new("TextLabel")
-introTitle.Size = UDim2.new(0, 500, 0, 100)
-introTitle.Position = UDim2.new(0.5, -250, 0.5, -50)
+introTitle.Size = UDim2.new(0, 600, 0, 80)
+introTitle.Position = UDim2.new(0.5, -300, 0.5, -130)
 introTitle.BackgroundTransparency = 1
 introTitle.Text = "SM1LE HUB"
 introTitle.Font = Enum.Font.GothamBlack
-introTitle.TextSize = 60
-introTitle.TextColor3 = Color3.fromRGB(220, 20, 20)
+introTitle.TextSize = 56
+introTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 introTitle.TextTransparency = 1
 introTitle.Parent = introFrame
+local introTitleGlow = Instance.new("UIStroke")
+introTitleGlow.Color = Color3.fromRGB(255, 255, 255)
+introTitleGlow.Thickness = 2
+introTitleGlow.Transparency = 1
+introTitleGlow.Parent = introTitle
+local introTitleGrad = Instance.new("UIGradient")
+introTitleGrad.Parent = introTitle
 
 local introSubtitle = Instance.new("TextLabel")
-introSubtitle.Size = UDim2.new(0, 300, 0, 40)
-introSubtitle.Position = UDim2.new(0.5, -150, 0.5, 60)
+introSubtitle.Size = UDim2.new(0, 400, 0, 35)
+introSubtitle.Position = UDim2.new(0.5, -200, 0.5, -40)
 introSubtitle.BackgroundTransparency = 1
-introSubtitle.Text = "Shrink or Hide"
-introSubtitle.Font = Enum.Font.Gotham
+introSubtitle.Text = "SHRINK OR HIDE"
+introSubtitle.Font = Enum.Font.GothamMedium
 introSubtitle.TextSize = 24
-introSubtitle.TextColor3 = Color3.fromRGB(200, 140, 140)
+introSubtitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 introSubtitle.TextTransparency = 1
 introSubtitle.Parent = introFrame
+local introSubGlow = Instance.new("UIStroke")
+introSubGlow.Color = Color3.fromRGB(255, 255, 255)
+introSubGlow.Thickness = 1.5
+introSubGlow.Transparency = 1
+introSubGlow.Parent = introSubtitle
+local introSubGrad = Instance.new("UIGradient")
+introSubGrad.Parent = introSubtitle
 
-local introVersion = Instance.new("TextLabel")
-introVersion.Size = UDim2.new(0, 200, 0, 25)
-introVersion.Position = UDim2.new(0.5, -100, 0.5, 95)
-introVersion.BackgroundTransparency = 1
-introVersion.Text = "by SM1LER"
-introVersion.Font = Enum.Font.GothamMedium
-introVersion.TextSize = 16
-introVersion.TextColor3 = Color3.fromRGB(255, 70, 70)
-introVersion.TextTransparency = 1
-introVersion.Parent = introFrame
+local introAuthor = Instance.new("TextLabel")
+introAuthor.Size = UDim2.new(0, 300, 0, 25)
+introAuthor.Position = UDim2.new(0.5, -150, 0.5, 5)
+introAuthor.BackgroundTransparency = 1
+introAuthor.Text = "by SM1LER"
+introAuthor.Font = Enum.Font.Gotham
+introAuthor.TextSize = 16
+introAuthor.TextColor3 = Color3.fromRGB(255, 255, 255)
+introAuthor.TextTransparency = 1
+introAuthor.Parent = introFrame
+local introAuthorGlow = Instance.new("UIStroke")
+introAuthorGlow.Color = Color3.fromRGB(255, 255, 255)
+introAuthorGlow.Thickness = 1
+introAuthorGlow.Transparency = 1
+introAuthorGlow.Parent = introAuthor
+local introAuthorGrad = Instance.new("UIGradient")
+introAuthorGrad.Parent = introAuthor
 
-local fadeIn = TweenService:Create(introTitle, TweenInfo.new(1, Enum.EasingStyle.Quint), {TextTransparency = 0})
-local fadeInSub = TweenService:Create(introSubtitle, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.In, 0.4), {TextTransparency = 0})
-local fadeInVer = TweenService:Create(introVersion, TweenInfo.new(1, Enum.EasingStyle.Quint, Enum.EasingDirection.In, 0.7), {TextTransparency = 0})
-local scaleUp = TweenService:Create(introTitle, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 70})
-local fadeOut = TweenService:Create(introFrame, TweenInfo.new(0.6, Enum.EasingStyle.Quint), {BackgroundTransparency = 1})
+local introLine = Instance.new("Frame")
+introLine.Size = UDim2.fromOffset(0, 1)
+introLine.Position = UDim2.new(0.5, -100, 0.5, 35)
+introLine.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+introLine.BorderSizePixel = 0
+introLine.BackgroundTransparency = 1
+introLine.Parent = introFrame
+local introLineGlow = Instance.new("UIStroke")
+introLineGlow.Color = Color3.fromRGB(255, 255, 255)
+introLineGlow.Thickness = 1.5
+introLineGlow.Transparency = 1
+introLineGlow.Parent = introLine
+local introLineGrad = Instance.new("UIGradient")
+introLineGrad.Parent = introLine
 
-fadeIn:Play()
-fadeInSub:Play()
-fadeInVer:Play()
-fadeIn.Completed:Wait()
-scaleUp:Play()
-scaleUp.Completed:Wait()
-task.wait(0.3)
-fadeOut:Play()
-fadeOut.Completed:Wait()
-introGui:Destroy()
+local introClock = 0
+local introConn
+introConn = RunService.Heartbeat:Connect(function(dt)
+    introClock += dt
+    for _, flake in ipairs(snowflakesIntro) do
+        flake.y = flake.y + flake.speed * dt
+        flake.x = flake.x + flake.wind * dt + math.sin(introClock * 1.2 + flake.twinkle) * 0.001
+        if flake.y > 1.1 then flake.y = -0.05; flake.x = math.random() end
+        if flake.x > 1.05 then flake.x = -0.05 end
+        if flake.x < -0.05 then flake.x = 1.05 end
+        flake.dot.Position = UDim2.fromScale(flake.x, flake.y)
+        local brightness = math.sin(introClock * 2.5 + flake.twinkle) * 0.15 + 0.85
+        flake.dot.BackgroundTransparency = 1 - brightness * 0.5
+        flake.glow.Transparency = 1 - brightness * 0.3
+    end
+    local wave = math.sin(introClock * 0.8) * 0.15
+    local whitePos = 0.55 + wave
+    local gradSequence = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(whitePos - 0.05, Color3.fromRGB(180, 180, 180)),
+        ColorSequenceKeypoint.new(whitePos + 0.05, Color3.fromRGB(40, 40, 40)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 0, 0)),
+    })
+    introTitleGrad.Color = gradSequence
+    introSubGrad.Color = gradSequence
+    introAuthorGrad.Color = gradSequence
+    introLineGrad.Color = gradSequence
+    local glowPulse = math.sin(introClock * 1.5) * 0.08 + 0.92
+    introTitleGlow.Transparency = introTitle.TextTransparency + (1 - glowPulse)
+    introSubGlow.Transparency = introSubtitle.TextTransparency + (1 - glowPulse)
+    introAuthorGlow.Transparency = introAuthor.TextTransparency + (1 - glowPulse)
+    introLineGlow.Transparency = introLine.BackgroundTransparency + (1 - glowPulse)
+end)
+
+task.spawn(function()
+    TweenService:Create(introTitle, TweenInfo.new(1.2, Enum.EasingStyle.Quint), {TextTransparency = 0}):Play()
+    TweenService:Create(introTitleGlow, TweenInfo.new(1.2, Enum.EasingStyle.Quint), {Transparency = 0.8}):Play()
+    task.wait(0.7)
+    TweenService:Create(introSubtitle, TweenInfo.new(0.9, Enum.EasingStyle.Quint), {TextTransparency = 0.1}):Play()
+    TweenService:Create(introSubGlow, TweenInfo.new(0.9, Enum.EasingStyle.Quint), {Transparency = 0.8}):Play()
+    task.wait(0.6)
+    TweenService:Create(introAuthor, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {TextTransparency = 0.2}):Play()
+    TweenService:Create(introAuthorGlow, TweenInfo.new(0.7, Enum.EasingStyle.Quint), {Transparency = 0.8}):Play()
+    TweenService:Create(introLine, TweenInfo.new(0.9, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(200, 1), BackgroundTransparency = 0.6}):Play()
+    TweenService:Create(introLineGlow, TweenInfo.new(0.9, Enum.EasingStyle.Quad), {Transparency = 0.7}):Play()
+    task.wait(1.7)
+    TweenService:Create(introTitle, TweenInfo.new(0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {TextSize = 60}):Play()
+    TweenService:Create(introTitleGlow, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {Thickness = 3.5, Transparency = 0.6}):Play()
+    task.wait(0.7)
+    TweenService:Create(introTitle, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {TextSize = 56}):Play()
+    TweenService:Create(introTitleGlow, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {Thickness = 2, Transparency = 0.8}):Play()
+    task.wait(3.5)
+    if introConn then introConn:Disconnect() end
+    TweenService:Create(introTitle, TweenInfo.new(0.8, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
+    TweenService:Create(introTitleGlow, TweenInfo.new(0.8, Enum.EasingStyle.Quad), {Transparency = 1}):Play()
+    TweenService:Create(introSubtitle, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
+    TweenService:Create(introSubGlow, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {Transparency = 1}):Play()
+    TweenService:Create(introAuthor, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {TextTransparency = 1}):Play()
+    TweenService:Create(introAuthorGlow, TweenInfo.new(0.5, Enum.EasingStyle.Quad), {Transparency = 1}):Play()
+    TweenService:Create(introLine, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {Size = UDim2.fromOffset(0, 1), BackgroundTransparency = 1}):Play()
+    TweenService:Create(introLineGlow, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {Transparency = 1}):Play()
+    for _, flake in ipairs(snowflakesIntro) do
+        TweenService:Create(flake.dot, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {BackgroundTransparency = 1}):Play()
+        TweenService:Create(flake.glow, TweenInfo.new(0.7, Enum.EasingStyle.Quad), {Transparency = 1}):Play()
+    end
+    TweenService:Create(introFrame, TweenInfo.new(0.8, Enum.EasingStyle.Quint), {BackgroundTransparency = 1}):Play()
+    task.wait(0.8)
+    introGui:Destroy()
+end)
+
+task.wait(10.9)
 
 -- ==================================================================
 -- ОСНОВНОЙ СКРИПТ
 -- ==================================================================
+
+local START_BACKGROUND = "https://create.roblox.com/store/asset/8485997901/Neon"
+local START_PANEL_TRANSPARENCY = 0.5
+local START_IMAGE_TRANSPARENCY = 0.05
 
 local S = {
     autofarm = false, autohide = false, speed = false, jump = false,
@@ -92,16 +219,16 @@ local S = {
     invisible = false, besthidev2 = false, seekerFollow = false,
     aimbot = false, showfov = false, aimbotTeamCheck = false, aimbotVisibleCheck = false,
     esp = false, box = false, name = false, tracer = false, dist = false,
-    espEggs = false, espCoins = false, espItemsBox = true, espItemsName = true, espItemsDist = true,
+    espBalls = false, espCoins = false, espItemsBox = true, espItemsName = true, espItemsDist = true,
     spinbot = false, bighead = false, bouncy = false, lowgrav = false,
     dodge = false, attach = false, thirdperson = false, dodgeOnHit = false,
-    safehide = false, xray = false, farmEgg = false, farmEggV2 = false,
-    autoClick = true, resetTarget = false,
-    theme = "Phantom", bgTransparency = 7,
+    safehide = false, xray = false, farmBall = false, farmBallV2 = false,
+    autoClick = true, resetTarget = false, snowEffect = false,
+    theme = "Cosmic", bgTransparency = math.floor(START_PANEL_TRANSPARENCY * 100),
     speedVal = 150, jumpVal = 200, hitboxVal = 2, aimbotFOV = 75,
     aimbotSmoothing = 1, aimbotTargetPart = "Head", teleTarget = "",
     dodgeIntensity = 5, safeHideType = "Behind", safeHidePart = "Head",
-    seekerFollowDir = "Behind", farmV2Mode = "Pull", clickDelay = 0.2,
+    seekerFollowDir = "Behind", farmBallV2Mode = "Pull", clickDelay = 0.2,
     teleportSpeed = "Instant", attachBodyPart = "Head"
 }
 
@@ -153,6 +280,14 @@ local Themes = {
         Stroke = Color3.fromRGB(100,20,35), SwitchOff = Color3.fromRGB(36,10,16),
         TitleGrad1 = Color3.fromRGB(255,170,195), TitleGrad2 = Color3.fromRGB(25,3,10),
         ByGrad1 = Color3.fromRGB(255,185,205), ByGrad2 = Color3.fromRGB(25,3,10)
+    },
+    Cosmic = {
+        ACCENT = Color3.fromRGB(180,130,255), ACCENT2 = Color3.fromRGB(0,0,0),
+        BG = Color3.fromRGB(5,3,12), BG2 = Color3.fromRGB(10,5,22), BG3 = Color3.fromRGB(18,10,35),
+        TXT = Color3.fromRGB(245,240,255), SUB = Color3.fromRGB(170,155,210),
+        Stroke = Color3.fromRGB(80,50,140), SwitchOff = Color3.fromRGB(18,10,35),
+        TitleGrad1 = Color3.fromRGB(200,150,255), TitleGrad2 = Color3.fromRGB(30,10,60),
+        ByGrad1 = Color3.fromRGB(210,170,255), ByGrad2 = Color3.fromRGB(30,10,60)
     }
 }
 
@@ -161,9 +296,19 @@ local ACCENT = currentTheme.ACCENT; local ACCENT2 = currentTheme.ACCENT2
 local BG = currentTheme.BG; local BG2 = currentTheme.BG2; local BG3 = currentTheme.BG3
 local TXT = currentTheme.TXT; local SUB = currentTheme.SUB
 
-local function corner(p,r) local c=Instance.new("UICorner") c.CornerRadius=UDim.new(0,r) c.Parent=p return c end
 local function pad(p,t,b,l,r) local u=Instance.new("UIPadding") u.PaddingTop=UDim.new(0,t) u.PaddingBottom=UDim.new(0,b) u.PaddingLeft=UDim.new(0,l) u.PaddingRight=UDim.new(0,r) u.Parent=p return u end
 local function gradient(p,c1,c2,rot) local g=Instance.new("UIGradient") g.Color=ColorSequence.new(c1,c2) g.Rotation=rot or 0 g.Parent=p return g end
+
+local function getAssetId(input)
+    local text = tostring(input or "")
+    return text:match("rbxassetid://(%d+)") or text:match("asset/(%d+)") or text:match("library/(%d+)") or text:match("[?&]id=(%d+)") or text:match("^(%d+)$")
+end
+
+local function toImageContent(input)
+    local id = getAssetId(input)
+    if id then return "rbxthumb://type=Asset&id=" .. id .. "&w=420&h=420" end
+    return tostring(input or "")
+end
 
 local parent = (gethui and gethui()) or game:GetService("CoreGui")
 local gui = Instance.new("ScreenGui")
@@ -172,17 +317,108 @@ gui.Name = "Sm1leHub"; gui.ResetOnSpawn = false; gui.ZIndexBehavior = Enum.ZInde
 local main = Instance.new("Frame")
 main.Size = UDim2.fromOffset(520,440); main.Position = UDim2.fromScale(0.5,0.5); main.AnchorPoint = Vector2.new(0.5,0.5)
 main.BackgroundColor3 = BG; main.BorderSizePixel = 0; main.ClipsDescendants = true; main.Parent = gui; corner(main,16)
-main.BackgroundTransparency = 0.07
+main.BackgroundTransparency = 1
 
 local mst = Instance.new("UIStroke",main); mst.Color = currentTheme.Stroke; mst.Thickness = 1.5; mst.Transparency = 0
 
+local bg = Instance.new("ImageLabel")
+bg.Name = "SM1LE_WorkingBackground"; bg.BackgroundTransparency = 1; bg.BorderSizePixel = 0
+bg.Position = UDim2.fromScale(0,0); bg.Size = UDim2.fromScale(1,1)
+bg.Image = toImageContent(START_BACKGROUND); bg.ScaleType = Enum.ScaleType.Crop
+bg.ImageTransparency = START_IMAGE_TRANSPARENCY; bg.ZIndex = 1; bg.Parent = main; corner(bg,16)
+
+local snowContainer = Instance.new("Frame")
+snowContainer.Name = "SnowContainer"; snowContainer.Size = UDim2.new(1,0,1,0)
+snowContainer.Position = UDim2.fromScale(0,0); snowContainer.BackgroundTransparency = 1
+snowContainer.BorderSizePixel = 0; snowContainer.ZIndex = 2; snowContainer.Visible = false; snowContainer.Parent = main
+
+local windowSnowflakes = {}
+for i = 1, 30 do
+    local flake = Instance.new("Frame")
+    local size = math.random(2, 4)
+    flake.Size = UDim2.fromOffset(size, size)
+    flake.Position = UDim2.fromScale(math.random(), math.random() * -1)
+    flake.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    flake.BackgroundTransparency = math.random() * 0.5 + 0.3
+    flake.BorderSizePixel = 0
+    flake.Parent = snowContainer
+    corner(flake, size / 2)
+    local glow = Instance.new("UIStroke")
+    glow.Color = Color3.fromRGB(255, 255, 255)
+    glow.Thickness = 1
+    glow.Transparency = 0.6
+    glow.Parent = flake
+    windowSnowflakes[i] = {
+        dot = flake, glow = glow,
+        x = flake.Position.X.Scale, y = flake.Position.Y.Scale,
+        speed = math.random() * 0.35 + 0.15,
+        wind = math.random() * 0.08 - 0.04,
+        twinkle = math.random() * 10,
+    }
+end
+
+local snowClock = 0
+local snowConn
+local function startSnow()
+    if snowConn then snowConn:Disconnect() end
+    snowContainer.Visible = true
+    snowClock = 0
+    snowConn = RunService.Heartbeat:Connect(function(dt)
+        snowClock += dt
+        for _, flake in ipairs(windowSnowflakes) do
+            flake.y = flake.y + flake.speed * dt
+            flake.x = flake.x + flake.wind * dt + math.sin(snowClock * 1.2 + flake.twinkle) * 0.001
+            if flake.y > 1.1 then flake.y = -0.05; flake.x = math.random() end
+            if flake.x > 1.05 then flake.x = -0.05 end
+            if flake.x < -0.05 then flake.x = 1.05 end
+            flake.dot.Position = UDim2.fromScale(flake.x, flake.y)
+            local brightness = math.sin(snowClock * 2.5 + flake.twinkle) * 0.15 + 0.85
+            flake.dot.BackgroundTransparency = 1 - brightness * 0.5
+            flake.glow.Transparency = 1 - brightness * 0.3
+        end
+    end)
+end
+
+local function stopSnow()
+    if snowConn then snowConn:Disconnect(); snowConn = nil end
+    snowContainer.Visible = false
+end
+
+local function pushUiAboveBackground()
+    for _, object in ipairs(main:GetDescendants()) do
+        if object:IsA("GuiObject") and object ~= bg and object ~= snowContainer and object.ZIndex <= bg.ZIndex then
+            object.ZIndex = bg.ZIndex + 1
+        end
+    end
+end
+
+local function applyPanelTransparency(value)
+    value = math.clamp(value, 0, 0.9)
+    main.BackgroundTransparency = 1
+    for _, object in ipairs(main:GetDescendants()) do
+        if object ~= bg and object ~= snowContainer and not object:IsDescendantOf(snowContainer) and (object:IsA("Frame") or object:IsA("TextButton") or object:IsA("TextBox")) then
+            if object.BackgroundTransparency < 1 then
+                object.BackgroundTransparency = value
+            end
+        end
+    end
+end
+
+pushUiAboveBackground()
+
+main.DescendantAdded:Connect(function(object)
+    if object:IsA("GuiObject") and object ~= bg and object ~= snowContainer and not object:IsDescendantOf(snowContainer) and object.ZIndex <= bg.ZIndex then
+        object.ZIndex = bg.ZIndex + 1
+    end
+end)
+
 local header = Instance.new("Frame"); header.Size = UDim2.new(1,0,0,56); header.BackgroundColor3 = BG2; header.BorderSizePixel = 0; header.Parent = main; corner(header,16)
-header.BackgroundTransparency = 0.07
+header.BackgroundTransparency = START_PANEL_TRANSPARENCY
 local hfix = Instance.new("Frame"); hfix.Size = UDim2.new(1,0,0,16); hfix.Position = UDim2.new(0,0,1,-16); hfix.BackgroundColor3 = BG2; hfix.BorderSizePixel = 0; hfix.Parent = header
-hfix.BackgroundTransparency = 0.07
+hfix.BackgroundTransparency = START_PANEL_TRANSPARENCY
 
 local logo = Instance.new("TextLabel"); logo.Size = UDim2.fromOffset(40,40); logo.Position = UDim2.fromOffset(14,8)
-logo.BackgroundTransparency = 1; logo.Font = Enum.Font.GothamBold; logo.Text = "❄️"; logo.TextSize = 28; logo.Parent = header
+logo.BackgroundTransparency = 1; logo.Font = Enum.Font.GothamBold; logo.Text = "🏖️"; logo.TextSize = 28; logo.Parent = header
 
 local titleC = Instance.new("TextLabel"); titleC.Size = UDim2.fromOffset(200,22); titleC.Position = UDim2.fromOffset(58,11)
 titleC.BackgroundTransparency = 1; titleC.Font = Enum.Font.GothamBold; titleC.TextSize = 19; titleC.TextColor3 = TXT
@@ -196,7 +432,7 @@ gradient(byLabel, currentTheme.ByGrad1, currentTheme.ByGrad2, 0)
 
 local statusL = Instance.new("TextLabel"); statusL.Size = UDim2.fromOffset(280,14); statusL.Position = UDim2.fromOffset(58,44)
 statusL.BackgroundTransparency = 1; statusL.Font = Enum.Font.GothamMedium; statusL.TextSize = 9; statusL.TextColor3 = SUB
-statusL.Text = "❄️ Shrink or Hide"; statusL.TextXAlignment = Enum.TextXAlignment.Left; statusL.Parent = header
+statusL.Text = "🏖️ Summer Event - Shrink or Hide"; statusL.TextXAlignment = Enum.TextXAlignment.Left; statusL.Parent = header
 
 local function hbtn(txt,x) local b=Instance.new("TextButton"); b.Size=UDim2.fromOffset(28,28); b.Position=UDim2.new(1,x,0,14)
 b.BackgroundColor3=BG3; b.Text=txt; b.TextColor3=TXT; b.Font=Enum.Font.GothamBold; b.TextSize=15; b.AutoButtonColor=true; b.Parent=header; corner(b,8); return b end
@@ -204,7 +440,7 @@ local closeB = hbtn("✕",-40); local minB = hbtn("—",-74)
 
 local body = Instance.new("Frame"); body.Size = UDim2.new(1,0,1,-56); body.Position = UDim2.fromOffset(0,56); body.BackgroundTransparency = 1; body.Parent = main
 local side = Instance.new("Frame"); side.Size = UDim2.new(0,140,1,0); side.BackgroundColor3 = BG2; side.BorderSizePixel = 0; side.Parent = body; pad(side,12,12,10,10)
-side.BackgroundTransparency = 0.07
+side.BackgroundTransparency = START_PANEL_TRANSPARENCY
 local sl = Instance.new("UIListLayout",side); sl.Padding = UDim.new(0,6); sl.SortOrder = Enum.SortOrder.LayoutOrder
 local content = Instance.new("Frame"); content.Size = UDim2.new(1,-140,1,0); content.Position = UDim2.fromOffset(140,0); content.BackgroundTransparency = 1; content.Parent = body
 
@@ -223,7 +459,7 @@ end
 local tabOrder = 0
 local function makeTab(name,icon)
     tabOrder+=1; local b=Instance.new("TextButton"); b.Size=UDim2.new(1,0,0,40); b.BackgroundColor3=BG2; b.AutoButtonColor=false; b.Text=""; b.LayoutOrder=tabOrder; b.Parent=side; corner(b,10)
-    b.BackgroundTransparency = 0.07
+    b.BackgroundTransparency = START_PANEL_TRANSPARENCY
     local acc=Instance.new("Frame"); acc.Size=UDim2.fromOffset(3,20); acc.Position=UDim2.fromOffset(0,10); acc.BackgroundColor3=ACCENT; acc.BorderSizePixel=0; acc.Visible=false; acc.Parent=b; corner(acc,2)
     local lbl=Instance.new("TextLabel"); lbl.Size=UDim2.new(1,-16,1,0); lbl.Position=UDim2.fromOffset(14,0); lbl.BackgroundTransparency=1; lbl.Font=Enum.Font.GothamMedium; lbl.TextSize=13.5; lbl.TextColor3=SUB; lbl.Text=icon.."  "..name; lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.Parent=b
     tabs[name]={btn=b,accent=acc,lbl=lbl}
@@ -241,7 +477,7 @@ local allRows = {}
 
 local function makeToggle(page,label,desc,key,callback)
     rowOrder+=1; local row=Instance.new("Frame"); row.Size=UDim2.new(1,0,0,46); row.BackgroundColor3=BG2; row.BorderSizePixel=0; row.LayoutOrder=rowOrder; row.Parent=page; corner(row,10)
-    row.BackgroundTransparency = 0.07
+    row.BackgroundTransparency = START_PANEL_TRANSPARENCY
     local st=Instance.new("UIStroke",row); st.Color=currentTheme.Stroke; st.Thickness=1; st.Transparency=0.3
     local t=Instance.new("TextLabel"); t.Size=UDim2.new(1,-70,0,18); t.Position=UDim2.fromOffset(12,6); t.BackgroundTransparency=1; t.Font=Enum.Font.GothamMedium; t.TextSize=13.5; t.TextColor3=TXT; t.Text=label; t.TextXAlignment=Enum.TextXAlignment.Left; t.Parent=row
     local d=Instance.new("TextLabel"); d.Size=UDim2.new(1,-70,0,13); d.Position=UDim2.fromOffset(12,25); d.BackgroundTransparency=1; d.Font=Enum.Font.Gotham; d.TextSize=10.5; d.TextColor3=SUB; d.Text=desc; d.TextXAlignment=Enum.TextXAlignment.Left; d.Parent=row
@@ -261,7 +497,7 @@ end
 
 local function makeSlider(page,label,desc,key,min,max,default,callback)
     S[key]=S[key] or default; rowOrder+=1; local row=Instance.new("Frame"); row.Size=UDim2.new(1,0,0,70); row.BackgroundColor3=BG2; row.BorderSizePixel=0; row.LayoutOrder=rowOrder; row.Parent=page; corner(row,10)
-    row.BackgroundTransparency = 0.07
+    row.BackgroundTransparency = START_PANEL_TRANSPARENCY
     local t=Instance.new("TextLabel"); t.Size=UDim2.new(1,-70,0,18); t.Position=UDim2.fromOffset(12,8); t.BackgroundTransparency=1; t.Font=Enum.Font.GothamMedium; t.TextSize=13.5; t.TextColor3=TXT; t.Text=label; t.TextXAlignment=Enum.TextXAlignment.Left; t.Parent=row
     local valLabel=Instance.new("TextLabel"); valLabel.Size=UDim2.fromOffset(60,18); valLabel.Position=UDim2.new(1,-72,0,8); valLabel.BackgroundTransparency=1; valLabel.Font=Enum.Font.GothamBold; valLabel.TextSize=13; valLabel.TextColor3=ACCENT; valLabel.Text=tostring(S[key] or default); valLabel.TextXAlignment=Enum.TextXAlignment.Right; valLabel.Parent=row
     local d=Instance.new("TextLabel"); d.Size=UDim2.new(1,-24,0,13); d.Position=UDim2.fromOffset(12,28); d.BackgroundTransparency=1; d.Font=Enum.Font.Gotham; d.TextSize=10.5; d.TextColor3=SUB; d.Text=desc; d.TextXAlignment=Enum.TextXAlignment.Left; d.Parent=row
@@ -283,7 +519,7 @@ end
 
 local function makeTextbox(page,label,desc,key,default)
     rowOrder+=1; local row=Instance.new("Frame"); row.Size=UDim2.new(1,0,0,60); row.BackgroundColor3=BG2; row.BorderSizePixel=0; row.LayoutOrder=rowOrder; row.Parent=page; corner(row,10)
-    row.BackgroundTransparency = 0.07
+    row.BackgroundTransparency = START_PANEL_TRANSPARENCY
     local t=Instance.new("TextLabel"); t.Size=UDim2.new(1,-24,0,18); t.Position=UDim2.fromOffset(12,6); t.BackgroundTransparency=1; t.Font=Enum.Font.GothamMedium; t.TextSize=13.5; t.TextColor3=TXT; t.Text=label; t.TextXAlignment=Enum.TextXAlignment.Left; t.Parent=row
     local d=Instance.new("TextLabel"); d.Size=UDim2.new(1,-24,0,13); d.Position=UDim2.fromOffset(12,24); d.BackgroundTransparency=1; d.Font=Enum.Font.Gotham; d.TextSize=10.5; d.TextColor3=SUB; d.Text=desc; d.TextXAlignment=Enum.TextXAlignment.Left; d.Parent=row
     local box=Instance.new("TextBox"); box.Size=UDim2.new(1,-24,0,24); box.Position=UDim2.fromOffset(12,38); box.BackgroundColor3=BG3; box.TextColor3=TXT; box.Font=Enum.Font.GothamBold; box.TextSize=12; box.Text=S[key] or default; box.PlaceholderText="Enter text..."; box.PlaceholderColor3=SUB; box.Parent=row; corner(box,8)
@@ -297,12 +533,17 @@ local function sectionInfo(page,text)
 end
 
 local function applyTransparency(transp)
-    main.BackgroundTransparency = transp; header.BackgroundTransparency = transp
-    hfix.BackgroundTransparency = transp; side.BackgroundTransparency = transp
+    applyPanelTransparency(transp)
+    header.BackgroundTransparency = transp
+    hfix.BackgroundTransparency = transp
+    side.BackgroundTransparency = transp
     for _, data in ipairs(allRows) do
         if data.type == "toggle" or data.type == "slider" or data.type == "textbox" then
             data.row.BackgroundTransparency = transp
         end
+    end
+    for name, tabData in pairs(tabs) do
+        tabData.btn.BackgroundTransparency = transp
     end
 end
 
@@ -312,7 +553,7 @@ local function applyTheme(themeName)
     BG = currentTheme.BG; BG2 = currentTheme.BG2; BG3 = currentTheme.BG3
     TXT = currentTheme.TXT; SUB = currentTheme.SUB
     local transp = S.bgTransparency / 100
-    main.BackgroundColor3 = BG; main.BackgroundTransparency = transp; mst.Color = currentTheme.Stroke
+    main.BackgroundColor3 = BG; main.BackgroundTransparency = 1; mst.Color = currentTheme.Stroke
     header.BackgroundColor3 = BG2; header.BackgroundTransparency = transp
     hfix.BackgroundColor3 = BG2; hfix.BackgroundTransparency = transp
     side.BackgroundColor3 = BG2; side.BackgroundTransparency = transp
@@ -342,9 +583,11 @@ local function applyTheme(themeName)
             data.box.BackgroundColor3 = BG3; data.box.TextColor3 = TXT; data.box.PlaceholderColor3 = SUB
         elseif data.type == "section" then data.label.TextColor3 = SUB end
     end
+    applyPanelTransparency(transp)
 end
 
-applyTransparency(0.07)
+applyTransparency(START_PANEL_TRANSPARENCY)
+applyPanelTransparency(START_PANEL_TRANSPARENCY)
 
 -- ========== УТИЛИТЫ ==========
 local function getChar(p) return p.Character or p.CharacterAdded:Wait() end
@@ -406,18 +649,22 @@ local function getSafeUnderMapPos()
     for _, v in ipairs(workspace:GetDescendants()) do
         if v:IsA("BasePart") then if v.Position.Y < minY then minY = v.Position.Y end end
     end
+    if minY == math.huge then minY = -50 end
     local root = getRoot(lp)
-    local x, z = root and root.Position.X or 0, root and root.Position.Z or 0
-    return Vector3.new(x, minY - 10, z)
+    local x, z = 0, 0
+    if root and root.Parent then x, z = root.Position.X, root.Position.Z end
+    return Vector3.new(x, minY - 15, z)
 end
 
 local function lockHover()
     local root = getRoot(lp) if not root then return end
-    local existing = root:FindFirstChild("FarmHover") if existing then existing:Destroy() end
-    local bv = Instance.new("BodyVelocity") bv.Name = "FarmHover" bv.Velocity = Vector3.new(0, 0, 0) bv.MaxForce = Vector3.new(1e6, 1e6, 1e6) bv.Parent = root
+    local existing = root:FindFirstChild("FarmHover") if existing then pcall(function() existing:Destroy() end) end
+    pcall(function()
+        local bv = Instance.new("BodyVelocity") bv.Name = "FarmHover" bv.Velocity = Vector3.new(0, 0, 0) bv.MaxForce = Vector3.new(1e6, 1e6, 1e6) bv.Parent = root
+    end)
 end
 local function unlockHover()
-    local root = getRoot(lp) if root then local bv = root:FindFirstChild("FarmHover") if bv then bv:Destroy() end end
+    local root = getRoot(lp) if root then local bv = root:FindFirstChild("FarmHover") if bv then pcall(function() bv:Destroy() end) end end
 end
 
 -- ========== ПРОВЕРКА НА LOBBY ==========
@@ -488,8 +735,122 @@ makeToggle(pMain,"Seeker Follow","Follow seeker",false,function(v) S.seekerFollo
 makeToggle(pFarm,"Auto Farm","Main farm toggle",false,function(v) S.autofarm=v if v then task.spawn(function() while S.autofarm do local weapon=getWeapon() if not weapon then local targetPos=findSafeSpot() local myRoot=getRoot(lp) if myRoot then if S.teleportSpeed=="Instant" then myRoot.CFrame=CFrame.new(targetPos) elseif S.teleportSpeed=="Fast" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.15),{CFrame=CFrame.new(targetPos)}); tween:Play(); task.wait(0.15) elseif S.teleportSpeed=="Medium" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.3),{CFrame=CFrame.new(targetPos)}); tween:Play(); task.wait(0.3) elseif S.teleportSpeed=="Slow" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.6),{CFrame=CFrame.new(targetPos)}); tween:Play(); task.wait(0.6) end end else if S.autoClick then local closest,minDist=nil,math.huge local myRoot=getRoot(lp) if myRoot then for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isHider(p) then local root=getRoot(p); local hum=getHum(p) if root and hum and hum.Health>0 then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist; closest=p end end end end end if closest and getRoot(closest) then local targetChar=getChar(closest) local targetPart=targetChar:FindFirstChild("Head") or getRoot(closest) if targetPart then local myRoot=getRoot(lp) if myRoot then myRoot.CFrame=targetPart.CFrame*CFrame.new(0,0,0.5) myRoot.Velocity=Vector3.zero end local tool=getWeapon() local char=getChar(lp) if tool and tool.Parent~=char then local hum=getHum(lp) if hum then hum:EquipTool(tool) end end if tool and tool:FindFirstChild("Handle") then local handle=tool.Handle if handle:IsA("BasePart") then handle.CFrame=targetPart.CFrame end end pcall(function() VirtualInputManager:SendMouseButtonEvent(0,0,0,true,game,0) task.wait(0.01) VirtualInputManager:SendMouseButtonEvent(0,0,0,false,game,0) end) pcall(function() tool:Activate() end) end end end end task.wait(S.clickDelay) end end) end end)
 makeToggle(pFarm,"Auto Click","Auto attack with weapon",true,function(v) S.autoClick=v end)
 makeSlider(pFarm,"Click Delay","Delay between clicks","clickDelay",0.001,0.5,0.2)
-makeToggle(pFarm,"Farm Eggs","Collect eggs/coins",false,function(v) S.farmEgg=v if v then local wasNoclip=S.noclip if not wasNoclip then S.noclip=true local c=lp.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end end end local safePos=getSafeUnderMapPos() local root=getRoot(lp) if root then root.CFrame=CFrame.new(safePos) end lockHover() task.spawn(function() while S.farmEgg do local root=getRoot(lp) if not root then break end local closest=nil for _,obj in ipairs(workspace:GetDescendants()) do if obj:IsA("BasePart") and not isInLobby(obj) then local n=obj.Name:lower() if n:find("egg") or n:find("coin") or n:find("money") or n:find("gem") or n:find("crystal") or n:find("chest") then closest=obj break end end end if closest and root and root.Parent then root.CFrame=CFrame.new(closest.Position+Vector3.new(0,3,0)) task.wait(0.1) if root and root.Parent then root.CFrame=CFrame.new(safePos) lockHover() end end task.wait(0.2) end unlockHover() if not wasNoclip then S.noclip=false local c=lp.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=true end end end end end) end end)
-makeToggle(pFarm,"Farm V2","Instant collect all",false,function(v) S.farmEggV2=v if v then local wasNoclip=S.noclip if not wasNoclip then S.noclip=true local c=lp.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end end end local safePos=getSafeUnderMapPos() local root=getRoot(lp) if root then root.CFrame=CFrame.new(safePos) end lockHover() task.spawn(function() while S.farmEggV2 do local root=getRoot(lp) if not root then break end local allItems={} for _,obj in ipairs(workspace:GetDescendants()) do if obj:IsA("BasePart") and not isInLobby(obj) then local n=obj.Name:lower() if n:find("egg") or n:find("coin") or n:find("money") or n:find("gem") or n:find("crystal") or n:find("chest") then table.insert(allItems,obj) end end end if S.farmV2Mode=="Pull" then for _,obj in ipairs(allItems) do if obj and obj:IsA("BasePart") then obj.CFrame=root.CFrame*CFrame.new(0,5,0) obj.Velocity=Vector3.zero end end else for _,obj in ipairs(allItems) do if not root or not root.Parent then break end unlockHover() local targetPos=obj.Position+Vector3.new(0,-2,0) root.CFrame=CFrame.new(targetPos) lockHover() task.wait() end end task.wait(0.01) end unlockHover() if not wasNoclip then S.noclip=false local c=lp.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=true end end end end end) end end)
+
+-- Farm Balls (телепорт к каждому мячу)
+makeToggle(pFarm,"Farm Balls","Teleport to each ball",false,function(v) 
+    S.farmBall=v 
+    if v then 
+        local wasNoclip=S.noclip 
+        if not wasNoclip then 
+            S.noclip=true 
+            local c=lp.Character 
+            if c then 
+                for _,p in ipairs(c:GetDescendants()) do 
+                    if p:IsA("BasePart") then p.CanCollide=false end 
+                end 
+            end 
+        end 
+        task.spawn(function() 
+            while S.farmBall do 
+                local root=getRoot(lp) 
+                local hum=getHum(lp)
+                if not root or not hum or hum.Health <= 0 then
+                    local char = lp.Character or lp.CharacterAdded:Wait()
+                    hum = char:WaitForChild("Humanoid")
+                    root = char:WaitForChild("HumanoidRootPart")
+                    task.wait(0.5)
+                end
+                local allItems={} 
+                for _,obj in ipairs(workspace:GetDescendants()) do 
+                    if obj:IsA("BasePart") and obj.Parent and not isInLobby(obj) then 
+                        local n=obj.Name:lower() 
+                        if n:find("ball") or n:find("coin") or n:find("money") or n:find("gem") or n:find("crystal") or n:find("chest") then 
+                            table.insert(allItems,obj) 
+                        end 
+                    end 
+                end 
+                if #allItems > 0 and root and root.Parent then 
+                    for _, obj in ipairs(allItems) do
+                        if not S.farmBall then break end
+                        if obj and obj.Parent then
+                            pcall(function()
+                                root.CFrame = CFrame.new(obj.Position)
+                                root.Velocity = Vector3.zero
+                                root.AssemblyLinearVelocity = Vector3.zero
+                            end)
+                            task.wait(0.2)
+                        end
+                    end
+                else
+                    task.wait(0.3)
+                end
+            end 
+            if not wasNoclip then 
+                S.noclip=false 
+                local c=lp.Character 
+                if c then 
+                    for _,p in ipairs(c:GetDescendants()) do 
+                        if p:IsA("BasePart") then p.CanCollide=true end 
+                    end 
+                end 
+            end 
+        end) 
+    end 
+end)
+
+-- Farm V2 (притягивает все мячи к тебе, работает постоянно)
+makeToggle(pFarm,"Farm V2","Pull all balls to you",false,function(v) 
+    S.farmBallV2=v 
+    if v then 
+        local wasNoclip=S.noclip 
+        if not wasNoclip then 
+            S.noclip=true 
+            local c=lp.Character 
+            if c then 
+                for _,p in ipairs(c:GetDescendants()) do 
+                    if p:IsA("BasePart") then p.CanCollide=false end 
+                end 
+            end 
+        end 
+        task.spawn(function() 
+            while S.farmBallV2 do 
+                local root=getRoot(lp) 
+                local hum=getHum(lp)
+                if not root or not hum or hum.Health <= 0 then
+                    local char = lp.Character or lp.CharacterAdded:Wait()
+                    hum = char:WaitForChild("Humanoid")
+                    root = char:WaitForChild("HumanoidRootPart")
+                    task.wait(0.5)
+                end
+                if root and root.Parent then
+                    for _,obj in ipairs(workspace:GetDescendants()) do 
+                        if obj:IsA("BasePart") and obj.Parent and not isInLobby(obj) then 
+                            local n=obj.Name:lower() 
+                            if n:find("ball") or n:find("coin") or n:find("money") or n:find("gem") or n:find("crystal") or n:find("chest") then 
+                                pcall(function()
+                                    obj.CFrame = root.CFrame * CFrame.new(math.random(-3,3), math.random(1,5), math.random(-3,3))
+                                    obj.Velocity = Vector3.zero
+                                    obj.AssemblyLinearVelocity = Vector3.zero
+                                    obj.AssemblyAngularVelocity = Vector3.zero
+                                end)
+                            end 
+                        end 
+                    end 
+                end
+                task.wait(0.05)
+            end 
+            if not wasNoclip then 
+                S.noclip=false 
+                local c=lp.Character 
+                if c then 
+                    for _,p in ipairs(c:GetDescendants()) do 
+                        if p:IsA("BasePart") then p.CanCollide=true end 
+                    end 
+                end 
+            end 
+        end) 
+    end 
+end)
 
 -- Aimbot
 makeToggle(pAimbot,"Aimbot","Auto aim",false,function(v) S.aimbot=v end)
@@ -505,7 +866,7 @@ makeToggle(pESP,"Box","Player boxes",false,function(v) S.box=v end)
 makeToggle(pESP,"Name","Player names",false,function(v) S.name=v end)
 makeToggle(pESP,"Tracer","Lines to players",false,function(v) S.tracer=v end)
 makeToggle(pESP,"Distance","Player distance",false,function(v) S.dist=v end)
-makeToggle(pESP,"ESP Eggs","Highlight eggs",false,function(v) S.espEggs=v end)
+makeToggle(pESP,"ESP Balls","Highlight beach balls",false,function(v) S.espBalls=v end)
 makeToggle(pESP,"ESP Coins","Highlight coins",false,function(v) S.espCoins=v end)
 makeToggle(pESP,"Items Box","Item boxes",true,function(v) S.espItemsBox=v end)
 makeToggle(pESP,"Items Name","Item names",true,function(v) S.espItemsName=v end)
@@ -537,10 +898,78 @@ for themeName,_ in pairs(Themes) do
         end
     end)
 end
-sectionInfo(pSettings,"Background Transparency:")
-makeSlider(pSettings,"BG Transparency","0 = solid, 100 = invisible","bgTransparency",0,90,7, function(val) applyTransparency(val / 100) end)
 
-S["theme_phantom"] = true
+local function findSettingsPage()
+    for _, object in ipairs(main:GetDescendants()) do
+        if object:IsA("ScrollingFrame") then
+            for _, child in ipairs(object:GetDescendants()) do
+                if child:IsA("TextLabel") and tostring(child.Text):find("Choose UI Theme") then
+                    return object
+                end
+            end
+        end
+    end
+end
+
+local settingsPage = findSettingsPage()
+if settingsPage then
+    local t1 = Instance.new("TextLabel"); t1.LayoutOrder = 900; t1.Size = UDim2.new(1,0,0,0); t1.AutomaticSize = Enum.AutomaticSize.Y
+    t1.BackgroundTransparency = 1; t1.Font = Enum.Font.GothamBold; t1.TextSize = 12; t1.TextColor3 = ACCENT; t1.TextWrapped = true
+    t1.TextXAlignment = Enum.TextXAlignment.Left; t1.Text = "Background Image:"; t1.Parent = settingsPage
+    local row = Instance.new("Frame"); row.LayoutOrder = 901; row.Size = UDim2.new(1,0,0,72); row.BackgroundColor3 = BG2
+    row.BackgroundTransparency = START_PANEL_TRANSPARENCY; row.BorderSizePixel = 0; row.Parent = settingsPage; corner(row,10)
+    local rs = Instance.new("UIStroke",row); rs.Color = currentTheme.Stroke; rs.Transparency = 0.25
+    local lbl = Instance.new("TextLabel"); lbl.Size = UDim2.new(1,-24,0,16); lbl.Position = UDim2.fromOffset(12,7)
+    lbl.BackgroundTransparency = 1; lbl.Font = Enum.Font.GothamMedium; lbl.TextSize = 12; lbl.TextColor3 = TXT
+    lbl.TextXAlignment = Enum.TextXAlignment.Left; lbl.Text = "Roblox background ID / URL"; lbl.Parent = row
+    local box = Instance.new("TextBox"); box.Size = UDim2.new(1,-24,0,26); box.Position = UDim2.fromOffset(12,28)
+    box.BackgroundColor3 = BG3; box.BackgroundTransparency = START_PANEL_TRANSPARENCY; box.TextColor3 = TXT
+    box.PlaceholderColor3 = SUB; box.Font = Enum.Font.Code; box.TextSize = 11; box.TextXAlignment = Enum.TextXAlignment.Left
+    box.ClearTextOnFocus = false; box.Text = START_BACKGROUND; box.PlaceholderText = "8485997901 or Roblox asset link"
+    box.Parent = row; corner(box,8)
+    local hint = Instance.new("TextLabel"); hint.Size = UDim2.new(1,-24,0,12); hint.Position = UDim2.fromOffset(12,56)
+    hint.BackgroundTransparency = 1; hint.Font = Enum.Font.Gotham; hint.TextSize = 9; hint.TextColor3 = SUB
+    hint.TextXAlignment = Enum.TextXAlignment.Left; hint.Text = "Use Roblox IDs/links. External JPG/PNG URLs usually do not load in ImageLabel."
+    hint.Parent = row
+    box.FocusLost:Connect(function() bg.Image = toImageContent(box.Text) end)
+    local sRow = Instance.new("Frame"); sRow.LayoutOrder = 902; sRow.Size = UDim2.new(1,0,0,70); sRow.BackgroundColor3 = BG2
+    sRow.BackgroundTransparency = START_PANEL_TRANSPARENCY; sRow.BorderSizePixel = 0; sRow.Parent = settingsPage; corner(sRow,10)
+    local ss = Instance.new("UIStroke",sRow); ss.Color = currentTheme.Stroke; ss.Transparency = 0.25
+    local sT = Instance.new("TextLabel"); sT.Size = UDim2.new(1,-82,0,18); sT.Position = UDim2.fromOffset(12,8)
+    sT.BackgroundTransparency = 1; sT.Font = Enum.Font.GothamMedium; sT.TextSize = 12; sT.TextColor3 = TXT
+    sT.TextXAlignment = Enum.TextXAlignment.Left; sT.Text = "Background Image Transparency"; sT.Parent = sRow
+    local pct = Instance.new("TextLabel"); pct.Size = UDim2.fromOffset(58,18); pct.Position = UDim2.new(1,-70,0,8)
+    pct.BackgroundTransparency = 1; pct.Font = Enum.Font.GothamBold; pct.TextSize = 12; pct.TextColor3 = ACCENT
+    pct.TextXAlignment = Enum.TextXAlignment.Right; pct.Parent = sRow
+    local bar = Instance.new("Frame"); bar.Size = UDim2.new(1,-24,0,8); bar.Position = UDim2.fromOffset(12,44)
+    bar.BackgroundColor3 = BG3; bar.BorderSizePixel = 0; bar.Parent = sRow; corner(bar,4)
+    local fill = Instance.new("Frame"); fill.BackgroundColor3 = ACCENT; fill.BorderSizePixel = 0; fill.Parent = bar; corner(fill,4)
+    local knob = Instance.new("TextButton"); knob.Size = UDim2.fromOffset(16,16); knob.BackgroundColor3 = TXT; knob.Text = ""; knob.Parent = bar; corner(knob,8)
+    local hit = Instance.new("TextButton"); hit.Size = UDim2.fromScale(1,1); hit.BackgroundTransparency = 1; hit.Text = ""; hit.Parent = bar
+    local dragging = false
+    local function setPercent(percent)
+        percent = math.clamp(math.floor(percent+0.5),0,90)
+        local ratio = percent/90
+        fill.Size = UDim2.fromScale(ratio,1); knob.Position = UDim2.new(ratio,-8,0.5,-8)
+        pct.Text = tostring(percent).."%"; bg.ImageTransparency = percent/100
+    end
+    local function updateFromInput(input)
+        local ratio = math.clamp((input.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
+        setPercent(ratio*90)
+    end
+    hit.InputBegan:Connect(function(input) if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=true; updateFromInput(input) end end)
+    knob.InputBegan:Connect(function(input) if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=true; updateFromInput(input) end end)
+    UserInputService.InputChanged:Connect(function(input) if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then updateFromInput(input) end end)
+    UserInputService.InputEnded:Connect(function(input) if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=false end end)
+    setPercent(math.floor(START_IMAGE_TRANSPARENCY*100))
+end
+
+sectionInfo(pSettings,"Panel Transparency:")
+makeSlider(pSettings,"BG Transparency","0 = solid, 100 = invisible","bgTransparency",0,90,math.floor(START_PANEL_TRANSPARENCY*100), function(val) applyTransparency(val/100) end)
+
+makeToggle(pSettings,"Snow Effect","❄️ Falling snow inside the window","snowEffect",function(on) if on then startSnow() else stopSnow() end end)
+
+S["theme_cosmic"] = true
 selectTab("Main")
 
 -- Dragging
@@ -647,14 +1076,14 @@ RunService.RenderStepped:Connect(function()
         end) end
     end
 
-    -- Item ESP
-    if (S.espEggs or S.espCoins) then
+    -- Item ESP (Balls & Coins)
+    if (S.espBalls or S.espCoins) then
         local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
         local currentItems = {}
         for _,obj in ipairs(workspace:GetDescendants()) do
             if obj:IsA("BasePart") and not isInLobby(obj) then
                 local n=obj.Name:lower()
-                if S.espEggs and n:find("egg") then currentItems[obj]="Egg"
+                if S.espBalls and n:find("ball") then currentItems[obj]="Ball"
                 elseif S.espCoins and (n:find("coin") or n:find("money") or n:find("gem") or n:find("crystal") or n:find("chest")) then currentItems[obj]="Coin" end
             end
         end
@@ -662,7 +1091,7 @@ RunService.RenderStepped:Connect(function()
             if not currentItems[obj] or not obj.Parent then drawings2.Box:Remove(); drawings2.Name:Remove(); drawings2.Dist:Remove(); itemDrawings[obj]=nil end
         end
         for obj,itemType in pairs(currentItems) do
-            if not itemDrawings[obj] then createItemESP(obj,itemType,itemType=="Egg" and Color3.fromRGB(0,255,0) or Color3.fromRGB(255,255,0)) end
+            if not itemDrawings[obj] then createItemESP(obj,itemType,itemType=="Ball" and Color3.fromRGB(255,200,0) or Color3.fromRGB(255,255,0)) end
         end
         for obj,drawings2 in pairs(itemDrawings) do
             if obj.Parent then
@@ -674,7 +1103,7 @@ RunService.RenderStepped:Connect(function()
                 else drawings2.Box.Visible=false; drawings2.Name.Visible=false; drawings2.Dist.Visible=false end
             end
         end
-    elseif not S.espEggs and not S.espCoins then
+    elseif not S.espBalls and not S.espCoins then
         for obj,drawings2 in pairs(itemDrawings) do drawings2.Box:Remove(); drawings2.Name:Remove(); drawings2.Dist:Remove() end
         itemDrawings = {}
     end
@@ -688,6 +1117,7 @@ _G.Sm1leHub = {
         for _,d in pairs(itemDrawings) do d.Box:Remove(); d.Name:Remove(); d.Dist:Remove() end
         FOVring:Remove()
         disableXray()
+        stopSnow()
         if gui then gui:Destroy() end
         _G.Sm1leHub=nil
     end
