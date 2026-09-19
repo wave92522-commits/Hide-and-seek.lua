@@ -1,7 +1,4 @@
---==================================================================
--- SM1LE HUB v2.0 — Shrink or Hide
--- RightCtrl hides, — minimizes, ✕ closes.
---==================================================================
+-- SM1LE HUB v2
 
 local AllowedPlaceId = 137541498231955
 if game.PlaceId ~= AllowedPlaceId then return end
@@ -14,8 +11,17 @@ local RunService = game:GetService("RunService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local lp = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
+
+local SpinRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Spin")
+
+local function invokeSpin()
+    pcall(function()
+        SpinRemote:InvokeServer()
+    end)
+end
 
 local function corner(p, r)
     local c = Instance.new("UICorner")
@@ -24,9 +30,7 @@ local function corner(p, r)
     return c
 end
 
--- ==================================================================
--- ИНТРО
--- ==================================================================
+-- Интро
 local introGui = Instance.new("ScreenGui")
 introGui.Name = "Sm1leIntro"
 introGui.ResetOnSpawn = false
@@ -205,10 +209,7 @@ end)
 
 task.wait(10.9)
 
--- ==================================================================
--- ОСНОВНОЙ СКРИПТ
--- ==================================================================
-
+-- Основной скрипт
 local START_BACKGROUND = "https://create.roblox.com/store/asset/8485997901/Neon"
 local START_PANEL_TRANSPARENCY = 0.5
 local START_IMAGE_TRANSPARENCY = 0.05
@@ -224,6 +225,7 @@ local S = {
     dodge = false, attach = false, thirdperson = false, dodgeOnHit = false,
     safehide = false, xray = false, farmBall = false, farmBallV2 = false,
     autoClick = true, resetTarget = false, snowEffect = false,
+    autoSpin = false, teleportBtn = false,
     theme = "Cosmic", bgTransparency = math.floor(START_PANEL_TRANSPARENCY * 100),
     speedVal = 150, jumpVal = 200, hitboxVal = 2, aimbotFOV = 75,
     aimbotSmoothing = 1, aimbotTargetPart = "Head", teleTarget = "",
@@ -422,7 +424,7 @@ logo.BackgroundTransparency = 1; logo.Font = Enum.Font.GothamBold; logo.Text = "
 
 local titleC = Instance.new("TextLabel"); titleC.Size = UDim2.fromOffset(200,22); titleC.Position = UDim2.fromOffset(58,11)
 titleC.BackgroundTransparency = 1; titleC.Font = Enum.Font.GothamBold; titleC.TextSize = 19; titleC.TextColor3 = TXT
-titleC.Text = "SM1LE HUB v2.0"; titleC.TextXAlignment = Enum.TextXAlignment.Left; titleC.Parent = header
+titleC.Text = "SM1LE HUB v2.1"; titleC.TextXAlignment = Enum.TextXAlignment.Left; titleC.Parent = header
 gradient(titleC, currentTheme.TitleGrad1, currentTheme.TitleGrad2, 0)
 
 local byLabel = Instance.new("TextLabel"); byLabel.Size = UDim2.fromOffset(100,16); byLabel.Position = UDim2.fromOffset(58,29)
@@ -495,6 +497,63 @@ local function makeToggle(page,label,desc,key,callback)
     table.insert(allRows, {type="toggle", row=row, st=st, t=t, d=d, sw=sw, knob=knob, key=key, page=page})
 end
 
+local function makeButton(page, label, desc, btnText, callback)
+    rowOrder += 1
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, 0, 0, 46)
+    row.BackgroundColor3 = BG2
+    row.BorderSizePixel = 0
+    row.LayoutOrder = rowOrder
+    row.BackgroundTransparency = START_PANEL_TRANSPARENCY
+    row.Parent = page
+    corner(row, 10)
+    local st = Instance.new("UIStroke", row)
+    st.Color = currentTheme.Stroke
+    st.Thickness = 1
+    st.Transparency = 0.3
+    local t = Instance.new("TextLabel")
+    t.Size = UDim2.new(1, -140, 0, 18)
+    t.Position = UDim2.fromOffset(12, 6)
+    t.BackgroundTransparency = 1
+    t.Font = Enum.Font.GothamMedium
+    t.TextSize = 13.5
+    t.TextColor3 = TXT
+    t.Text = label
+    t.TextXAlignment = Enum.TextXAlignment.Left
+    t.Parent = row
+    local d = Instance.new("TextLabel")
+    d.Size = UDim2.new(1, -140, 0, 13)
+    d.Position = UDim2.fromOffset(12, 25)
+    d.BackgroundTransparency = 1
+    d.Font = Enum.Font.Gotham
+    d.TextSize = 10.5
+    d.TextColor3 = SUB
+    d.Text = desc
+    d.TextXAlignment = Enum.TextXAlignment.Left
+    d.Parent = row
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.fromOffset(110, 28)
+    btn.Position = UDim2.new(1, -122, 0.5, -14)
+    btn.BackgroundColor3 = ACCENT
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.TextColor3 = Color3.fromRGB(15, 10, 30)
+    btn.Text = btnText
+    btn.AutoButtonColor = true
+    btn.Parent = row
+    corner(btn, 8)
+    btn.MouseButton1Click:Connect(function()
+        if callback then callback() end
+        local old = btn.Text
+        btn.Text = "DONE"
+        task.delay(0.4, function()
+            btn.Text = old
+        end)
+    end)
+    table.insert(allRows, {type = "button", row = row, st = st, t = t, d = d, btn = btn, page = page})
+end
+
 local function makeSlider(page,label,desc,key,min,max,default,callback)
     S[key]=S[key] or default; rowOrder+=1; local row=Instance.new("Frame"); row.Size=UDim2.new(1,0,0,70); row.BackgroundColor3=BG2; row.BorderSizePixel=0; row.LayoutOrder=rowOrder; row.Parent=page; corner(row,10)
     row.BackgroundTransparency = START_PANEL_TRANSPARENCY
@@ -538,7 +597,7 @@ local function applyTransparency(transp)
     hfix.BackgroundTransparency = transp
     side.BackgroundTransparency = transp
     for _, data in ipairs(allRows) do
-        if data.type == "toggle" or data.type == "slider" or data.type == "textbox" then
+        if data.type == "toggle" or data.type == "slider" or data.type == "textbox" or data.type == "button" then
             data.row.BackgroundTransparency = transp
         end
     end
@@ -581,6 +640,11 @@ local function applyTheme(themeName)
             data.row.BackgroundColor3 = BG2; data.row.BackgroundTransparency = transp
             data.t.TextColor3 = TXT; data.d.TextColor3 = SUB
             data.box.BackgroundColor3 = BG3; data.box.TextColor3 = TXT; data.box.PlaceholderColor3 = SUB
+        elseif data.type == "button" then
+            data.row.BackgroundColor3 = BG2; data.row.BackgroundTransparency = transp
+            data.st.Color = currentTheme.Stroke
+            data.t.TextColor3 = TXT; data.d.TextColor3 = SUB
+            data.btn.BackgroundColor3 = ACCENT
         elseif data.type == "section" then data.label.TextColor3 = SUB end
     end
     applyPanelTransparency(transp)
@@ -589,7 +653,7 @@ end
 applyTransparency(START_PANEL_TRANSPARENCY)
 applyPanelTransparency(START_PANEL_TRANSPARENCY)
 
--- ========== УТИЛИТЫ ==========
+-- Утилиты
 local function getChar(p) return p.Character or p.CharacterAdded:Wait() end
 local function getRoot(p) return getChar(p):FindFirstChild("HumanoidRootPart") end
 local function getHum(p) return getChar(p):FindFirstChildOfClass("Humanoid") end
@@ -667,7 +731,7 @@ local function unlockHover()
     local root = getRoot(lp) if root then local bv = root:FindFirstChild("FarmHover") if bv then pcall(function() bv:Destroy() end) end end
 end
 
--- ========== ПРОВЕРКА НА LOBBY ==========
+-- Проверка на Lobby
 local function isInLobby(obj)
     local current = obj
     while current do
@@ -677,7 +741,7 @@ local function isInLobby(obj)
     return false
 end
 
--- ========== X-RAY ==========
+-- X-Ray
 local xrayHighlights = {}
 local function enableXray()
     for _, player in ipairs(Players:GetPlayers()) do
@@ -694,7 +758,7 @@ local function disableXray()
     xrayHighlights = {}
 end
 
--- ========== CHARACTER ADDED ==========
+-- Восстановление после респавна
 lp.CharacterAdded:Connect(function(char)
     task.wait(0.5)
     if S.speed then local h = char:FindFirstChildOfClass("Humanoid") if h then h.WalkSpeed = S.speedVal end end
@@ -705,7 +769,7 @@ lp.CharacterAdded:Connect(function(char)
     if S.thirdperson then local h = char:FindFirstChildOfClass("Humanoid") if h then Camera.CameraSubject = h; Camera.CameraType = Enum.CameraType.Follow end end
 end)
 
--- TABS
+-- Вкладки
 local pMain = makeTab("Main","🏠")
 local pFarm = makeTab("Farm","🤖")
 local pAimbot = makeTab("Aimbot","🎯")
@@ -715,29 +779,44 @@ local pFun = makeTab("Fun","🎪")
 local pSettings = makeTab("Settings","⚙️")
 
 -- Main
-makeToggle(pMain,"X-Ray","Player highlight",false,function(v) S.xray=v if v then enableXray() else disableXray() end end)
-makeToggle(pMain,"Auto Hide","Super hide mode",false,function(v) S.autohide=v if v then local safePos=findSafeSpot() task.spawn(function() while S.autohide do local myRoot=getRoot(lp) if myRoot and (myRoot.Position-safePos).Magnitude>5 then myRoot.CFrame=CFrame.new(safePos) end task.wait(0.5) end end) end end)
-makeToggle(pMain,"Safe Hide","Hide near seeker",false,function(v) S.safehide=v if v then S.noclip=true local char=lp.Character if char then for _,p in ipairs(char:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end end task.spawn(function() while S.safehide do local myRoot=getRoot(lp) if not myRoot then task.wait(0.5) continue end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if not closestSeeker then task.wait(0.5) continue end local targetChar=getChar(closestSeeker) if targetChar then local targetPart=targetChar:FindFirstChild(S.safeHidePart) or targetChar:FindFirstChild("HumanoidRootPart") if targetPart then local offset=Vector3.zero if S.safeHideType=="Behind" then offset=targetPart.CFrame.LookVector*-3 elseif S.safeHideType=="Front" then offset=targetPart.CFrame.LookVector*3 elseif S.safeHideType=="Left" then offset=targetPart.CFrame.RightVector*-3 elseif S.safeHideType=="Right" then offset=targetPart.CFrame.RightVector*3 elseif S.safeHideType=="Above" then offset=Vector3.new(0,3,0) elseif S.safeHideType=="Below" then offset=Vector3.new(0,-3,0) elseif S.safeHideType=="Inside" then myRoot.CFrame=targetPart.CFrame myRoot.Velocity=Vector3.zero task.wait() continue end myRoot.CFrame=CFrame.new(targetPart.Position+offset) myRoot.Velocity=Vector3.zero end end task.wait() end end) else S.noclip=false local char=lp.Character if char then for _,p in ipairs(char:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=true end end end end end)
-makeToggle(pMain,"Speed Boost","Move faster",false,function(v) S.speed=v; local h=lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") if h then h.WalkSpeed=v and S.speedVal or 16 end end)
+makeToggle(pMain,"X-Ray","Player highlight","xray",function(v) S.xray=v if v then enableXray() else disableXray() end end)
+makeToggle(pMain,"Auto Hide","Super hide mode","autohide",function(v) S.autohide=v if v then local safePos=findSafeSpot() task.spawn(function() while S.autohide do local myRoot=getRoot(lp) if myRoot and (myRoot.Position-safePos).Magnitude>5 then myRoot.CFrame=CFrame.new(safePos) end task.wait(0.5) end end) end end)
+makeToggle(pMain,"Safe Hide","Hide near seeker","safehide",function(v) S.safehide=v if v then S.noclip=true local char=lp.Character if char then for _,p in ipairs(char:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=false end end end task.spawn(function() while S.safehide do local myRoot=getRoot(lp) if not myRoot then task.wait(0.5) continue end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if not closestSeeker then task.wait(0.5) continue end local targetChar=getChar(closestSeeker) if targetChar then local targetPart=targetChar:FindFirstChild(S.safeHidePart) or targetChar:FindFirstChild("HumanoidRootPart") if targetPart then local offset=Vector3.zero if S.safeHideType=="Behind" then offset=targetPart.CFrame.LookVector*-3 elseif S.safeHideType=="Front" then offset=targetPart.CFrame.LookVector*3 elseif S.safeHideType=="Left" then offset=targetPart.CFrame.RightVector*-3 elseif S.safeHideType=="Right" then offset=targetPart.CFrame.RightVector*3 elseif S.safeHideType=="Above" then offset=Vector3.new(0,3,0) elseif S.safeHideType=="Below" then offset=Vector3.new(0,-3,0) elseif S.safeHideType=="Inside" then myRoot.CFrame=targetPart.CFrame myRoot.Velocity=Vector3.zero task.wait() continue end myRoot.CFrame=CFrame.new(targetPart.Position+offset) myRoot.Velocity=Vector3.zero end end task.wait() end end) else S.noclip=false local char=lp.Character if char then for _,p in ipairs(char:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=true end end end end end)
+makeToggle(pMain,"Speed Boost","Move faster","speed",function(v) S.speed=v; local h=lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") if h then h.WalkSpeed=v and S.speedVal or 16 end end)
 makeSlider(pMain,"Speed Value","Walk speed","speedVal",50,300,150)
-makeToggle(pMain,"Jump Power","Super jumps",false,function(v) S.jump=v; local h=lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") if h then h.JumpPower=v and S.jumpVal or 50 end end)
+makeToggle(pMain,"Jump Power","Super jumps","jump",function(v) S.jump=v; local h=lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") if h then h.JumpPower=v and S.jumpVal or 50 end end)
 makeSlider(pMain,"Jump Value","Jump power","jumpVal",50,300,200)
-makeToggle(pMain,"Hitbox Expander","Bigger hitbox",false,function(v) S.hitbox=v; local c=lp.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") and p.Name~="HumanoidRootPart" then p.Size=v and p.Size*S.hitboxVal or p.Size/S.hitboxVal end end end end)
+makeToggle(pMain,"Hitbox Expander","Bigger hitbox","hitbox",function(v) S.hitbox=v; local c=lp.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") and p.Name~="HumanoidRootPart" then p.Size=v and p.Size*S.hitboxVal or p.Size/S.hitboxVal end end end end)
 makeSlider(pMain,"Hitbox Size","Expander multiplier","hitboxVal",1.5,5,2)
-makeToggle(pMain,"Fullbright","Max brightness",false,function(v) S.fullbright=v; Lighting.Brightness=v and 3 or 1 end)
-makeToggle(pMain,"Noclip","Walk through walls",false,function(v) S.noclip=v; local c=lp.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=not v end end end end)
-makeToggle(pMain,"Anti AFK","Auto jump every 30s",false,function(v) S.antiafk=v end)
-makeToggle(pMain,"Invisible","Become invisible",false,function(v) S.invisible=v; local c=lp.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.Transparency=v and 1 or 0 end end end end)
-makeToggle(pMain,"Best Hide V2","Hide under seeker",false,function(v) S.besthidev2=v if v then S.noclip=true task.spawn(function() while S.besthidev2 do if not isHider(lp) then task.wait(0.5) continue end local myRoot=getRoot(lp) if not myRoot then task.wait(0.5) continue end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if closestSeeker and getRoot(closestSeeker) then local seekerRoot=getRoot(closestSeeker) local targetPos=seekerRoot.Position-Vector3.new(0,10,0) myRoot.CFrame=CFrame.new(targetPos) myRoot.Velocity=Vector3.zero local bv=Instance.new("BodyVelocity") bv.Velocity=Vector3.zero bv.MaxForce=Vector3.new(1e6,1e6,1e6) bv.Parent=myRoot game.Debris:AddItem(bv,0.1) end task.wait(0.3) end end) else S.noclip=false end end)
-makeToggle(pMain,"Seeker Follow","Follow seeker",false,function(v) S.seekerFollow=v if v then task.spawn(function() while S.seekerFollow do if not isHider(lp) then task.wait(0.5) continue end local myRoot=getRoot(lp) if not myRoot then task.wait(0.5) continue end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if closestSeeker and getRoot(closestSeeker) then local seekerRoot=getRoot(closestSeeker) local dir=S.seekerFollowDir local offset=Vector3.zero local look=seekerRoot.CFrame.LookVector local right=seekerRoot.CFrame.RightVector if dir=="Behind" then offset=-look*5 elseif dir=="Front" then offset=look*5 elseif dir=="Left" then offset=-right*5 elseif dir=="Right" then offset=right*5 end local targetPos=seekerRoot.Position+offset+Vector3.new(0,2,0) myRoot.CFrame=CFrame.new(targetPos) myRoot.Velocity=Vector3.zero local bv=Instance.new("BodyVelocity") bv.Velocity=Vector3.zero bv.MaxForce=Vector3.new(1e6,1e6,1e6) bv.Parent=myRoot game.Debris:AddItem(bv,0.1) end task.wait(0.1) end end) end end)
+makeToggle(pMain,"Fullbright","Max brightness","fullbright",function(v) S.fullbright=v; Lighting.Brightness=v and 3 or 1 end)
+makeToggle(pMain,"Noclip","Walk through walls","noclip",function(v) S.noclip=v; local c=lp.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide=not v end end end end)
+makeToggle(pMain,"Anti AFK","Auto jump every 30s","antiafk",function(v) S.antiafk=v end)
+makeToggle(pMain,"Invisible","Become invisible","invisible",function(v) S.invisible=v; local c=lp.Character if c then for _,p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.Transparency=v and 1 or 0 end end end end)
+makeToggle(pMain,"Best Hide V2","Hide under seeker","besthidev2",function(v) S.besthidev2=v if v then S.noclip=true task.spawn(function() while S.besthidev2 do if not isHider(lp) then task.wait(0.5) continue end local myRoot=getRoot(lp) if not myRoot then task.wait(0.5) continue end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if closestSeeker and getRoot(closestSeeker) then local seekerRoot=getRoot(closestSeeker) local targetPos=seekerRoot.Position-Vector3.new(0,10,0) myRoot.CFrame=CFrame.new(targetPos) myRoot.Velocity=Vector3.zero local bv=Instance.new("BodyVelocity") bv.Velocity=Vector3.zero bv.MaxForce=Vector3.new(1e6,1e6,1e6) bv.Parent=myRoot game.Debris:AddItem(bv,0.1) end task.wait(0.3) end end) else S.noclip=false end end)
+makeToggle(pMain,"Seeker Follow","Follow seeker","seekerFollow",function(v) S.seekerFollow=v if v then task.spawn(function() while S.seekerFollow do if not isHider(lp) then task.wait(0.5) continue end local myRoot=getRoot(lp) if not myRoot then task.wait(0.5) continue end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if closestSeeker and getRoot(closestSeeker) then local seekerRoot=getRoot(closestSeeker) local dir=S.seekerFollowDir local offset=Vector3.zero local look=seekerRoot.CFrame.LookVector local right=seekerRoot.CFrame.RightVector if dir=="Behind" then offset=-look*5 elseif dir=="Front" then offset=look*5 elseif dir=="Left" then offset=-right*5 elseif dir=="Right" then offset=right*5 end local targetPos=seekerRoot.Position+offset+Vector3.new(0,2,0) myRoot.CFrame=CFrame.new(targetPos) myRoot.Velocity=Vector3.zero local bv=Instance.new("BodyVelocity") bv.Velocity=Vector3.zero bv.MaxForce=Vector3.new(1e6,1e6,1e6) bv.Parent=myRoot game.Debris:AddItem(bv,0.1) end task.wait(0.1) end end) end end)
 
 -- Farm
-makeToggle(pFarm,"Auto Farm","Main farm toggle",false,function(v) S.autofarm=v if v then task.spawn(function() while S.autofarm do local weapon=getWeapon() if not weapon then local targetPos=findSafeSpot() local myRoot=getRoot(lp) if myRoot then if S.teleportSpeed=="Instant" then myRoot.CFrame=CFrame.new(targetPos) elseif S.teleportSpeed=="Fast" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.15),{CFrame=CFrame.new(targetPos)}); tween:Play(); task.wait(0.15) elseif S.teleportSpeed=="Medium" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.3),{CFrame=CFrame.new(targetPos)}); tween:Play(); task.wait(0.3) elseif S.teleportSpeed=="Slow" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.6),{CFrame=CFrame.new(targetPos)}); tween:Play(); task.wait(0.6) end end else if S.autoClick then local closest,minDist=nil,math.huge local myRoot=getRoot(lp) if myRoot then for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isHider(p) then local root=getRoot(p); local hum=getHum(p) if root and hum and hum.Health>0 then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist; closest=p end end end end end if closest and getRoot(closest) then local targetChar=getChar(closest) local targetPart=targetChar:FindFirstChild("Head") or getRoot(closest) if targetPart then local myRoot=getRoot(lp) if myRoot then myRoot.CFrame=targetPart.CFrame*CFrame.new(0,0,0.5) myRoot.Velocity=Vector3.zero end local tool=getWeapon() local char=getChar(lp) if tool and tool.Parent~=char then local hum=getHum(lp) if hum then hum:EquipTool(tool) end end if tool and tool:FindFirstChild("Handle") then local handle=tool.Handle if handle:IsA("BasePart") then handle.CFrame=targetPart.CFrame end end pcall(function() VirtualInputManager:SendMouseButtonEvent(0,0,0,true,game,0) task.wait(0.01) VirtualInputManager:SendMouseButtonEvent(0,0,0,false,game,0) end) pcall(function() tool:Activate() end) end end end end task.wait(S.clickDelay) end end) end end)
-makeToggle(pFarm,"Auto Click","Auto attack with weapon",true,function(v) S.autoClick=v end)
+makeToggle(pFarm,"Auto Farm","Main farm toggle","autofarm",function(v) S.autofarm=v if v then task.spawn(function() while S.autofarm do local weapon=getWeapon() if not weapon then local targetPos=findSafeSpot() local myRoot=getRoot(lp) if myRoot then if S.teleportSpeed=="Instant" then myRoot.CFrame=CFrame.new(targetPos) elseif S.teleportSpeed=="Fast" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.15),{CFrame=CFrame.new(targetPos)}); tween:Play(); task.wait(0.15) elseif S.teleportSpeed=="Medium" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.3),{CFrame=CFrame.new(targetPos)}); tween:Play(); task.wait(0.3) elseif S.teleportSpeed=="Slow" then local tween=TweenService:Create(myRoot,TweenInfo.new(0.6),{CFrame=CFrame.new(targetPos)}); tween:Play(); task.wait(0.6) end end else if S.autoClick then local closest,minDist=nil,math.huge local myRoot=getRoot(lp) if myRoot then for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isHider(p) then local root=getRoot(p); local hum=getHum(p) if root and hum and hum.Health>0 then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist; closest=p end end end end end if closest and getRoot(closest) then local targetChar=getChar(closest) local targetPart=targetChar:FindFirstChild("Head") or getRoot(closest) if targetPart then local myRoot=getRoot(lp) if myRoot then myRoot.CFrame=targetPart.CFrame*CFrame.new(0,0,0.5) myRoot.Velocity=Vector3.zero end local tool=getWeapon() local char=getChar(lp) if tool and tool.Parent~=char then local hum=getHum(lp) if hum then hum:EquipTool(tool) end end if tool and tool:FindFirstChild("Handle") then local handle=tool.Handle if handle:IsA("BasePart") then handle.CFrame=targetPart.CFrame end end pcall(function() VirtualInputManager:SendMouseButtonEvent(0,0,0,true,game,0) task.wait(0.01) VirtualInputManager:SendMouseButtonEvent(0,0,0,false,game,0) end) pcall(function() tool:Activate() end) end end end end task.wait(S.clickDelay) end end) end end)
+makeToggle(pFarm,"Auto Click","Auto attack with weapon","autoClick",function(v) S.autoClick=v end)
 makeSlider(pFarm,"Click Delay","Delay between clicks","clickDelay",0.001,0.5,0.2)
 
--- Farm Balls (телепорт к каждому мячу)
-makeToggle(pFarm,"Farm Balls","Teleport to each ball",false,function(v) 
+makeToggle(pFarm, "Auto Spin", "Spins the wheel every 2 seconds", "autoSpin", function(v)
+    S.autoSpin = v
+    if v then
+        task.spawn(function()
+            while S.autoSpin do
+                invokeSpin()
+                task.wait(2)
+            end
+        end)
+    end
+end)
+
+makeButton(pFarm, "Spin", "Spins the wheel once when clicked", "SPIN NOW", function()
+    invokeSpin()
+end)
+
+makeToggle(pFarm,"Farm Balls","Teleport to each ball","farmBall",function(v) 
     S.farmBall=v 
     if v then 
         local wasNoclip=S.noclip 
@@ -798,8 +877,7 @@ makeToggle(pFarm,"Farm Balls","Teleport to each ball",false,function(v)
     end 
 end)
 
--- Farm V2 (притягивает все мячи к тебе, работает постоянно)
-makeToggle(pFarm,"Farm V2","Pull all balls to you",false,function(v) 
+makeToggle(pFarm,"Farm V2","Pull all balls to you","farmBallV2",function(v) 
     S.farmBallV2=v 
     if v then 
         local wasNoclip=S.noclip 
@@ -853,38 +931,38 @@ makeToggle(pFarm,"Farm V2","Pull all balls to you",false,function(v)
 end)
 
 -- Aimbot
-makeToggle(pAimbot,"Aimbot","Auto aim",false,function(v) S.aimbot=v end)
-makeToggle(pAimbot,"Team Check","Ignore teammates",false,function(v) S.aimbotTeamCheck=v end)
-makeToggle(pAimbot,"Visible Check","Only visible targets",false,function(v) S.aimbotVisibleCheck=v end)
+makeToggle(pAimbot,"Aimbot","Auto aim","aimbot",function(v) S.aimbot=v end)
+makeToggle(pAimbot,"Team Check","Ignore teammates","aimbotTeamCheck",function(v) S.aimbotTeamCheck=v end)
+makeToggle(pAimbot,"Visible Check","Only visible targets","aimbotVisibleCheck",function(v) S.aimbotVisibleCheck=v end)
 makeSlider(pAimbot,"FOV","Aimbot field of view","aimbotFOV",50,300,75)
 makeSlider(pAimbot,"Smoothing","Aim smoothing","aimbotSmoothing",0.05,1,1)
-makeToggle(pAimbot,"FOV Circle","Show aim circle",false,function(v) S.showfov=v end)
+makeToggle(pAimbot,"FOV Circle","Show aim circle","showfov",function(v) S.showfov=v end)
 
 -- ESP
-makeToggle(pESP,"ESP","Enable ESP",false,function(v) S.esp=v end)
-makeToggle(pESP,"Box","Player boxes",false,function(v) S.box=v end)
-makeToggle(pESP,"Name","Player names",false,function(v) S.name=v end)
-makeToggle(pESP,"Tracer","Lines to players",false,function(v) S.tracer=v end)
-makeToggle(pESP,"Distance","Player distance",false,function(v) S.dist=v end)
-makeToggle(pESP,"ESP Balls","Highlight beach balls",false,function(v) S.espBalls=v end)
-makeToggle(pESP,"ESP Coins","Highlight coins",false,function(v) S.espCoins=v end)
-makeToggle(pESP,"Items Box","Item boxes",true,function(v) S.espItemsBox=v end)
-makeToggle(pESP,"Items Name","Item names",true,function(v) S.espItemsName=v end)
-makeToggle(pESP,"Items Dist","Item distance",true,function(v) S.espItemsDist=v end)
+makeToggle(pESP,"ESP","Enable ESP","esp",function(v) S.esp=v end)
+makeToggle(pESP,"Box","Player boxes","box",function(v) S.box=v end)
+makeToggle(pESP,"Name","Player names","name",function(v) S.name=v end)
+makeToggle(pESP,"Tracer","Lines to players","tracer",function(v) S.tracer=v end)
+makeToggle(pESP,"Distance","Player distance","dist",function(v) S.dist=v end)
+makeToggle(pESP,"ESP Balls","Highlight beach balls","espBalls",function(v) S.espBalls=v end)
+makeToggle(pESP,"ESP Coins","Highlight coins","espCoins",function(v) S.espCoins=v end)
+makeToggle(pESP,"Items Box","Item boxes","espItemsBox",function(v) S.espItemsBox=v end)
+makeToggle(pESP,"Items Name","Item names","espItemsName",function(v) S.espItemsName=v end)
+makeToggle(pESP,"Items Dist","Item distance","espItemsDist",function(v) S.espItemsDist=v end)
 
 -- Teleport
 makeTextbox(pTeleport,"Target Name","Player name","teleTarget","")
-makeToggle(pTeleport,"Teleport to Target","",false,function(v) if v and S.teleTarget~="" then for _,p in ipairs(Players:GetPlayers()) do if p.Name:lower():find(S.teleTarget:lower()) and p~=lp then local root=getRoot(p) if root then local myRoot=getRoot(lp) if myRoot then myRoot.CFrame=root.CFrame*CFrame.new(0,3,0) end break end end end S.teleTarget="" task.wait(0.1) end end)
+makeToggle(pTeleport,"Teleport to Target","","teleportBtn",function(v) if v and S.teleTarget~="" then for _,p in ipairs(Players:GetPlayers()) do if p.Name:lower():find(S.teleTarget:lower()) and p~=lp then local root=getRoot(p) if root then local myRoot=getRoot(lp) if myRoot then myRoot.CFrame=root.CFrame*CFrame.new(0,3,0) end break end end end S.teleTarget="" task.wait(0.1) end end)
 
 -- Fun
-makeToggle(pFun,"Spinbot","Spin around",false,function(v) S.spinbot=v local root=getRoot(lp) if not root then return end local av=root:FindFirstChild("SpinAV") if v then if not av then av=Instance.new("BodyAngularVelocity",root) av.Name="SpinAV" av.MaxTorque=Vector3.new(9e9,9e9,9e9) end av.AngularVelocity=Vector3.new(0,30,0) else if av then av:Destroy() end end end)
-makeToggle(pFun,"Big Head","Huge head",false,function(v) S.bighead=v; local c=lp.Character if c then local h=c:FindFirstChild("Head") if h and h:IsA("BasePart") then h.Size=v and Vector3.new(6,6,6) or Vector3.new(2,1,2) end end end)
-makeToggle(pFun,"Bouncy","Jump constantly",false,function(v) S.bouncy=v local root=getRoot(lp) if not root then return end local bv=root:FindFirstChild("BouncyVel") if v then if not bv then bv=Instance.new("BodyVelocity",root) bv.Name="BouncyVel" bv.MaxForce=Vector3.new(0,1e6,0) end bv.Velocity=Vector3.new(0,50,0) task.spawn(function() while S.bouncy do if root and bv then bv.Velocity=Vector3.new(0,50,0) end task.wait(0.1) end if bv then bv:Destroy() end end) else if bv then bv:Destroy() end end end)
-makeToggle(pFun,"Low Gravity","Moon gravity",false,function(v) S.lowgrav=v; workspace.Gravity=v and 20 or 196.2 end)
-makeToggle(pFun,"Dodge","Auto dodge",false,function(v) S.dodge=v if v then task.spawn(function() while S.dodge do local root=getRoot(lp) if not root then task.wait(0.1) continue end local dir=Vector3.new(math.random(-1,1),0,math.random(-1,1)).Unit local offset=dir*S.dodgeIntensity local newPos=root.Position+offset local safe=false for _,pl in ipairs(getPlatforms()) do if pl.Position.Y+pl.Size.Y/2>=newPos.Y-3 and pl.Position.Y-pl.Size.Y/2<=newPos.Y+3 and math.abs(pl.Position.X-newPos.X)<pl.Size.X/2+2 and math.abs(pl.Position.Z-newPos.Z)<pl.Size.Z/2+2 then safe=true break end end if safe then root.CFrame=CFrame.new(newPos) end task.wait(0.1) end end) end end)
-makeToggle(pFun,"Dodge on Hit","Dodge when hit",false,function(v) S.dodgeOnHit=v if v then local hum=getHum(lp) if not hum then return end local prevHealth=hum.Health hum.HealthChanged:Connect(function(newHealth) if not S.dodgeOnHit then return end if newHealth<prevHealth then local myRoot=getRoot(lp) if not myRoot then return end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if not closestSeeker then return end local targetRoot=getRoot(closestSeeker) if not targetRoot then return end local awayDir=(myRoot.Position-targetRoot.Position).Unit local safePos=myRoot.Position+awayDir*10 myRoot.CFrame=CFrame.new(safePos) task.spawn(function() task.wait(0.5) if not S.dodgeOnHit then return end if myRoot and targetRoot.Parent then myRoot.CFrame=targetRoot.CFrame end end) end prevHealth=newHealth end) end end)
-makeToggle(pFun,"Attach to Seeker","Stick to seeker",false,function(v) S.attach=v if v then task.spawn(function() while S.attach do local myRoot=getRoot(lp) if not myRoot then task.wait(0.5) continue end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if not closestSeeker then task.wait(0.5) continue end local targetChar=getChar(closestSeeker) if targetChar then local targetPart=targetChar:FindFirstChild(S.attachBodyPart) or targetChar:FindFirstChild("HumanoidRootPart") if targetPart then myRoot.CFrame=targetPart.CFrame end end task.wait() end end) end end)
-makeToggle(pFun,"3rd Person","Third person view",false,function(v) S.thirdperson=v; local h=lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") if h then Camera.CameraSubject=v and h or h; Camera.CameraType=v and Enum.CameraType.Follow or Enum.CameraType.Custom end end)
+makeToggle(pFun,"Spinbot","Spin around","spinbot",function(v) S.spinbot=v local root=getRoot(lp) if not root then return end local av=root:FindFirstChild("SpinAV") if v then if not av then av=Instance.new("BodyAngularVelocity",root) av.Name="SpinAV" av.MaxTorque=Vector3.new(9e9,9e9,9e9) end av.AngularVelocity=Vector3.new(0,30,0) else if av then av:Destroy() end end end)
+makeToggle(pFun,"Big Head","Huge head","bighead",function(v) S.bighead=v; local c=lp.Character if c then local h=c:FindFirstChild("Head") if h and h:IsA("BasePart") then h.Size=v and Vector3.new(6,6,6) or Vector3.new(2,1,2) end end end)
+makeToggle(pFun,"Bouncy","Jump constantly","bouncy",function(v) S.bouncy=v local root=getRoot(lp) if not root then return end local bv=root:FindFirstChild("BouncyVel") if v then if not bv then bv=Instance.new("BodyVelocity",root) bv.Name="BouncyVel" bv.MaxForce=Vector3.new(0,1e6,0) end bv.Velocity=Vector3.new(0,50,0) task.spawn(function() while S.bouncy do if root and bv then bv.Velocity=Vector3.new(0,50,0) end task.wait(0.1) end if bv then bv:Destroy() end end) else if bv then bv:Destroy() end end end)
+makeToggle(pFun,"Low Gravity","Moon gravity","lowgrav",function(v) S.lowgrav=v; workspace.Gravity=v and 20 or 196.2 end)
+makeToggle(pFun,"Dodge","Auto dodge","dodge",function(v) S.dodge=v if v then task.spawn(function() while S.dodge do local root=getRoot(lp) if not root then task.wait(0.1) continue end local dir=Vector3.new(math.random(-1,1),0,math.random(-1,1)).Unit local offset=dir*S.dodgeIntensity local newPos=root.Position+offset local safe=false for _,pl in ipairs(getPlatforms()) do if pl.Position.Y+pl.Size.Y/2>=newPos.Y-3 and pl.Position.Y-pl.Size.Y/2<=newPos.Y+3 and math.abs(pl.Position.X-newPos.X)<pl.Size.X/2+2 and math.abs(pl.Position.Z-newPos.Z)<pl.Size.Z/2+2 then safe=true break end end if safe then root.CFrame=CFrame.new(newPos) end task.wait(0.1) end end) end end)
+makeToggle(pFun,"Dodge on Hit","Dodge when hit","dodgeOnHit",function(v) S.dodgeOnHit=v if v then local hum=getHum(lp) if not hum then return end local prevHealth=hum.Health hum.HealthChanged:Connect(function(newHealth) if not S.dodgeOnHit then return end if newHealth<prevHealth then local myRoot=getRoot(lp) if not myRoot then return end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if not closestSeeker then return end local targetRoot=getRoot(closestSeeker) if not targetRoot then return end local awayDir=(myRoot.Position-targetRoot.Position).Unit local safePos=myRoot.Position+awayDir*10 myRoot.CFrame=CFrame.new(safePos) task.spawn(function() task.wait(0.5) if not S.dodgeOnHit then return end if myRoot and targetRoot.Parent then myRoot.CFrame=targetRoot.CFrame end end) end prevHealth=newHealth end) end end)
+makeToggle(pFun,"Attach to Seeker","Stick to seeker","attach",function(v) S.attach=v if v then task.spawn(function() while S.attach do local myRoot=getRoot(lp) if not myRoot then task.wait(0.5) continue end local closestSeeker=nil local minDist=math.huge for _,p in ipairs(Players:GetPlayers()) do if p~=lp and isSeeker(p) then local root=getRoot(p) if root then local dist=(myRoot.Position-root.Position).Magnitude if dist<minDist then minDist=dist closestSeeker=p end end end end if not closestSeeker then task.wait(0.5) continue end local targetChar=getChar(closestSeeker) if targetChar then local targetPart=targetChar:FindFirstChild(S.attachBodyPart) or targetChar:FindFirstChild("HumanoidRootPart") if targetPart then myRoot.CFrame=targetPart.CFrame end end task.wait() end end) end end)
+makeToggle(pFun,"3rd Person","Third person view","thirdperson",function(v) S.thirdperson=v; local h=lp.Character and lp.Character:FindFirstChildOfClass("Humanoid") if h then Camera.CameraSubject=v and h or h; Camera.CameraType=v and Enum.CameraType.Follow or Enum.CameraType.Custom end end)
 
 -- Settings
 sectionInfo(pSettings,"Choose UI Theme:")
@@ -972,7 +1050,7 @@ makeToggle(pSettings,"Snow Effect","❄️ Falling snow inside the window","snow
 S["theme_cosmic"] = true
 selectTab("Main")
 
--- Dragging
+-- Перетаскивание окна
 do local drag,sp,si; header.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then drag=true; sp=main.Position; si=i.Position; i.Changed:Connect(function() if i.UserInputState==Enum.UserInputState.End then drag=false end end) end end)
 UserInputService.InputChanged:Connect(function(i) if drag and (i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch) then local dd=i.Position-si; main.Position=UDim2.new(sp.X.Scale,sp.X.Offset+dd.X,sp.Y.Scale,sp.Y.Offset+dd.Y) end end) end
 
@@ -1030,10 +1108,8 @@ end
 
 -- Render loop
 RunService.RenderStepped:Connect(function()
-    -- FOV
     FOVring.Visible = S.showfov; FOVring.Radius = S.aimbotFOV; FOVring.Position = Camera.ViewportSize/2
 
-    -- Aimbot
     if S.aimbot and getWeapon() and not S.thirdperson then
         local closest=nil; local minWorldDist=math.huge; local center=Vector2.new(Camera.ViewportSize.X/2,Camera.ViewportSize.Y/2); local myRoot=getRoot(lp) if not myRoot then return end
         for _,p in ipairs(Players:GetPlayers()) do
@@ -1051,7 +1127,6 @@ RunService.RenderStepped:Connect(function()
         if closest then local targetCFrame=CFrame.new(Camera.CFrame.Position,closest.Position) Camera.CFrame=Camera.CFrame:Lerp(targetCFrame,S.aimbotSmoothing) end
     end
 
-    -- ESP
     if S.esp and drawings then
         local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
         for p,d in pairs(drawings) do pcall(function()
@@ -1076,7 +1151,6 @@ RunService.RenderStepped:Connect(function()
         end) end
     end
 
-    -- Item ESP (Balls & Coins)
     if (S.espBalls or S.espCoins) then
         local myRoot = lp.Character and lp.Character:FindFirstChild("HumanoidRootPart")
         local currentItems = {}
@@ -1113,6 +1187,7 @@ closeB.MouseButton1Click:Connect(function() if _G.Sm1leHub then _G.Sm1leHub.Dest
 
 _G.Sm1leHub = {
     Destroy = function()
+        for k, v in pairs(S) do if type(v) == "boolean" then S[k] = false end end
         for _,d in pairs(drawings) do for _,x in pairs(d) do pcall(function() x:Remove() end) end end
         for _,d in pairs(itemDrawings) do d.Box:Remove(); d.Name:Remove(); d.Dist:Remove() end
         FOVring:Remove()
